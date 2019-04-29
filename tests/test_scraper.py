@@ -12,9 +12,10 @@ SERVER_FILE_SINGLE_PAGE_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS.html')
 SERVER_FILE_SINGLE_PAGE_NO_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageNoJS.html')
 SERVER_FILE_MULTI_PAGE_JS = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS.html')
 SERVER_FILE_MULTI_PAGE_NO_JS = urljoin(LOCAL_SERVER_HTTP, 'MultiPageNoJS.html')
-SINGLE_FILE_TEST_STRING_JS = 'LOADED-Javascript Line'
-SINGLE_FILE_TEST_STRING_NON_JS = 'NON-Javascript Line'
-
+MULTI_FILE_NO_JS_START_GOOD = urljoin(LOCAL_SERVER_HTTP, 'MultiPageNoJS_1.html')
+MULTI_FILE_JS_START_GOOD = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_1.html')
+JS_TEST_STRING = 'LOADED-Javascript Line'
+NON_JS_TEST_STRING = 'NON-Javascript Line'
 
 ########################################
 # Tests for Fuction is_local_address
@@ -72,15 +73,19 @@ def test_check_url_local_only_exception(url):
 ########################################
 # Tests for Fuction scrape_url
 ########################################
-# Good Download Tests - Single-Page
-SINGLE_PARE_REQUESTS_PARAM_COMBOS = {
-    (SERVER_FILE_SINGLE_PAGE_JS, True, True),
-    (SERVER_FILE_SINGLE_PAGE_JS, False, False),
-    (SERVER_FILE_SINGLE_PAGE_NO_JS, False, False),
-    (SERVER_FILE_SINGLE_PAGE_NO_JS, True, False)
-}
-@pytest.mark.parametrize('url, load_javascript, expect_javascript', SINGLE_PARE_REQUESTS_PARAM_COMBOS)
-def test_single_page_requests(url, load_javascript, expect_javascript):
+# Good Download Tests - Single + Multi Page
+GOOD_REQUESTS_PARAM_COMBOS = [
+    (SERVER_FILE_SINGLE_PAGE_JS, True, True, 1),
+    (SERVER_FILE_SINGLE_PAGE_JS, False, False, 1),
+    (SERVER_FILE_SINGLE_PAGE_NO_JS, False, False, 1),
+    (SERVER_FILE_SINGLE_PAGE_NO_JS, True, False, 1),
+    (MULTI_FILE_JS_START_GOOD, True, True, 3),
+    (MULTI_FILE_JS_START_GOOD, False, False, 3),
+    (MULTI_FILE_NO_JS_START_GOOD, False, False, 3),
+    (MULTI_FILE_NO_JS_START_GOOD, True, False, 3)
+]
+@pytest.mark.parametrize('url, load_javascript, expect_javascript, page_count', GOOD_REQUESTS_PARAM_COMBOS)
+def test_good_page_requests(url, load_javascript, expect_javascript, page_count):
     # First make sure our local server is reachable
     assert scraper.check_url(LOCAL_SERVER_HTTP, local_only=True)
 
@@ -88,18 +93,25 @@ def test_single_page_requests(url, load_javascript, expect_javascript):
     result = scraper.scrape_url(url, load_javascript=load_javascript)
     assert result
 
-    # Exactly 1 page found
-    assert len(result.html_pages) == 1
+    # The expected number of pages found
+    assert len(result.html_pages) == page_count
 
     # Search String Found
-    assert SINGLE_FILE_TEST_STRING_NON_JS in result.html_pages[0]
-    if expect_javascript:
-        assert SINGLE_FILE_TEST_STRING_JS in result.html_pages[0]
-    else:
-        assert SINGLE_FILE_TEST_STRING_JS not in result.html_pages[0]
+    for idx, page in enumerate(result.html_pages):
+        print(F'CHECK PAGE: {idx}, page: "{page}"')
+        assert NON_JS_TEST_STRING in page
+
+        if expect_javascript:
+            assert JS_TEST_STRING in page
+        else:
+            assert JS_TEST_STRING not in page
+
+        if page_count > 1:
+            assert F'THIS IS PAGE {idx+1}/3' in page
 
 
 # Download Tests - Multi-Page
+
 
 
 # Special Download Tests - Single-Page

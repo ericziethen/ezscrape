@@ -39,9 +39,8 @@ class Result():
 '''
 !!! If I cannot find a way to not download CHromium automatically, maybe easier
 !!! to use headless chromium and then we don't need html-requests but onlye requests
-!!! 
-!!! 
-!!! 
+!!! but it might be ok for us to do as well, esecially when using Internally and in an
+!!! automated way it should only download once
 '''
 
 def scrape_url(url: str, *, proxy_url: Optional[str] = None,
@@ -53,7 +52,9 @@ def scrape_url(url: str, *, proxy_url: Optional[str] = None,
     if load_javascript:
         r.html.render()
     result = Result()
-    result.add_page(r.html.text)
+
+    for html in r.html:
+        result.add_page(html.html)
 
     return result
 
