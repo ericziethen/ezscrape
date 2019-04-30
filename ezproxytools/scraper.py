@@ -28,13 +28,18 @@ class IncompletePagesError(PageDownloadError):
 class Result():
     """Class to keep the Download Result Data."""
 
-    def __init__(self):
+    def __init__(self, response):
         """Initialize the Scrape Result."""
+        self._response = response
         self.html_pages = []
 
-    def add_page(self, page) -> None:
-        self.html_pages.append(page)
+        for html in response.html:
+            self.html_pages.append(html.html)
 
+    @property
+    def result_good(self) -> bool:
+        """Check if the result is ok,"""
+        return self._response.status_code == 200
 
 '''
 !!! If I cannot find a way to not download CHromium automatically, maybe easier
@@ -48,13 +53,10 @@ def scrape_url(url: str, *, proxy_url: Optional[str] = None,
     """Download the given url with the given proxy if specified."""
 
     session = requests_html.HTMLSession()
-    r = session.get(url)
+    response = session.get(url)
     if load_javascript:
-        r.html.render()
-    result = Result()
-
-    for html in r.html:
-        result.add_page(html.html)
+        response.html.render()
+    result = Result(response)
 
     return result
 
