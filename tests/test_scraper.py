@@ -10,8 +10,8 @@ LOCAL_SERVER_HTTP = R'http://127.0.0.1:8000'
 
 SERVER_FILE_SINGLE_PAGE_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS.html')
 SERVER_FILE_SINGLE_PAGE_NO_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageNoJS.html')
-SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD = urljoin(LOCAL_SERVER_HTTP, 'MultiPageNoJS_1.html')
 SERVER_FILE_MULTI_PAGE_JS_START_GOOD = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_1.html')
+SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD = urljoin(LOCAL_SERVER_HTTP, 'MultiPageNoJS_1.html')
 JS_TEST_STRING = 'LOADED-Javascript Line'
 NON_JS_TEST_STRING = 'NON-Javascript Line'
 
@@ -73,15 +73,16 @@ def test_check_url_local_only_exception(url):
 ########################################
 # Good Download Tests - Single + Multi Page
 GOOD_REQUESTS_PARAM_COMBOS = [
-    (SERVER_FILE_SINGLE_PAGE_JS, True, True, 1),
-    (SERVER_FILE_SINGLE_PAGE_JS, False, False, 1),
-    (SERVER_FILE_SINGLE_PAGE_NO_JS, False, False, 1),
-    (SERVER_FILE_SINGLE_PAGE_NO_JS, True, False, 1),
-    (SERVER_FILE_MULTI_PAGE_JS_START_GOOD, True, True, 3),
-    (SERVER_FILE_MULTI_PAGE_JS_START_GOOD, False, False, 3),
-    (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
-    (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
+    #(SERVER_FILE_SINGLE_PAGE_JS, True, True, 1),
+    #(SERVER_FILE_SINGLE_PAGE_JS, False, False, 1),
+    #(SERVER_FILE_SINGLE_PAGE_NO_JS, False, False, 1),
+    #(SERVER_FILE_SINGLE_PAGE_NO_JS, True, False, 1),
+    (SERVER_FILE_MULTI_PAGE_JS_START_GOOD, True, True, 10),
+    #(SERVER_FILE_MULTI_PAGE_JS_START_GOOD, False, False, 1),
+    #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
+    #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
 ]
+@pytest.mark.eric
 @pytest.mark.parametrize('url, load_javascript, expect_javascript, page_count', GOOD_REQUESTS_PARAM_COMBOS)
 def test_good_page_requests(url, load_javascript, expect_javascript, page_count):
     # First make sure our local server is reachable
@@ -89,6 +90,7 @@ def test_good_page_requests(url, load_javascript, expect_javascript, page_count)
 
     # Scrape the Page
     result = scraper.scrape_url(url, load_javascript=load_javascript)
+    assert result
     assert result.result_good
 
     # The expected number of pages found

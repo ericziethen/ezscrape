@@ -35,6 +35,7 @@ class Result():
 
         for html in response.html:
             self.html_pages.append(html.html)
+            print(F'ERIC:::"{html.html}"')
 
     @property
     def result_good(self) -> bool:

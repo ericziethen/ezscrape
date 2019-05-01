@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+  <!-- from https://gist.github.com/ourmaninamsterdam/4626375 -->
+  <head>
+    <meta name="generator"
+    content="HTML Tidy for HTML5 (experimental) for Windows https://github.com/w3c/tidy-html5/tree/c63cc39" />
+    <title>Simple JavaScript pagination</title>
+    <meta charset="UTF-8" />
+    <style>
+        div{
+                position: relative;
+        }
+        #stage{
+                background: #ccc;
+                height: 400px;
+                position: relative;
+                width: 1200px;
+        }
+        #page_nav li{
+                display: inline-block;
+                list-style: none;
+                padding: 5px;
+        }
+        #page_nav li a{
+                color: #000;
+                cursor: pointer;
+                text-decoration: underline;
+        }
+        input[type=&quot;text&quot;]{
+                width: 30px;
+        }
+        #page_info{
+                display: block;
+                border: solid #ccc;
+                margin: 5px;
+                padding: 5px;
+        }
+        #curr_page{
+                font-weight: bold;
+        }
+        #page_nav{
+                border: solid #ccc;
+                margin: 5px;
+                padding: 5px;
+                text-align: center;
+        }
+</style>
+  </head>
+  <body>
+    <section>
+    <h1>Simple JavaScript pagination</h1>
+    <a href="http://" id="previous">&lt;&lt; Previous</a> |
+    <a href="http://" id="next">Next &gt;&gt;</a> |
+    <a href="http://" id="reset">Reset</a> |
+    <label>Go to Page
+    <input type="text" name="page_input" id="page_input" value="" /></label>
+    <a href="#" id="goto">&gt;&gt;</a>
+    <span id="page_info">THIS IS PAGE <label id="curr_page"></label>/<label id="page_count"></label></span>
+    <ul id="results"></ul>
+    <nav>
+      <ul id="page_nav"></ul>
+    </nav></section>
+    <script type="text/javascript" src="MultiPageJS_1.js"></script>
+  </body>
+</html>
