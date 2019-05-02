@@ -81,6 +81,7 @@ GOOD_REQUESTS_PARAM_COMBOS = [
     #(SERVER_FILE_MULTI_PAGE_JS_START_GOOD, False, False, 1),
     #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
     #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
+    #(R'https://www.us-proxy.org/', True, True, 10) # !!! THIS DOESNT WORK AT ALL, HANGS
 ]
 @pytest.mark.eric
 @pytest.mark.parametrize('url, load_javascript, expect_javascript, page_count', GOOD_REQUESTS_PARAM_COMBOS)
@@ -188,10 +189,17 @@ def test_good_page_requests(url, load_javascript, expect_javascript, page_count)
 ################################
 
 
+################################
+# Tests for Class ScrapeConfig
+################################
+
+
 
 ################################
 # Tests for Class DownloadResult
 ################################
+
+
 
 
 

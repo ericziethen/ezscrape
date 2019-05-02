@@ -5,6 +5,7 @@
 import ipaddress
 import os
 import requests_html
+import sys
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -25,7 +26,19 @@ class IncompletePagesError(PageDownloadError):
     """Exception when failed to download all pages."""
 
 
-class Result():
+class ScrapeConfig():
+    """Class to hold scrape config data needed for downloading the html."""
+
+    def __init__(self) -> None:
+        self.proxy_server = ''
+        self.javascript = False
+        self.next_page_xpath = ''
+        self.max_next_pages = sys.maxsize
+        # TODO - Define more fields whatever might be needed for scraping
+
+
+
+class ScrapeResult():
     """Class to keep the Download Result Data."""
 
     def __init__(self, response):
@@ -43,20 +56,28 @@ class Result():
         return self._response.status_code == 200
 
 '''
-!!! If I cannot find a way to not download CHromium automatically, maybe easier
+!!! ### SOME PROBLEMS
+!!! 1.) If I cannot find a way to not download CHromium automatically, maybe easier
 !!! to use headless chromium and then we don't need html-requests but onlye requests
 !!! but it might be ok for us to do as well, esecially when using Internally and in an
 !!! automated way it should only download once
+!!! 2.) It does not do javascript pagination, so if that is essential maybe use some alternative way
+!!! 3.) Selenium uses browser "always?", for HTML pages we might just want to use requests-html
+!!! 
+!!! 
 '''
 
 def scrape_url(url: str, *, proxy_url: Optional[str] = None,
-               load_javascript: bool = False) -> Result:
+               load_javascript: bool = False) -> ScrapeResult:
     """Download the given url with the given proxy if specified."""
 
     session = requests_html.HTMLSession()
     response = session.get(url)
     if load_javascript:
-        response.html.render()
+        response.html.render(scrolldown=3, sleep=1)
+    for html in response.html:
+        print('PAGINATION:::', html)
+    print('NEXT PAGE:::', response.html.next())
     result = Result(response)
 
     return result
