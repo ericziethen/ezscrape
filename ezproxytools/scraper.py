@@ -18,22 +18,26 @@ SPECIAL_LOCAL_ADDRESSES = [
     '127.1'
 ]
 
-class PageDownloadError(Exception):
-    """Generic Page Download Error."""
+class ScrapeError(Exception):
+    """Generic Page Scrape Error."""
 
 
-class IncompletePagesError(PageDownloadError):
+class MultiPageError(ScrapeError):
     """Exception when failed to download all pages."""
 
 
 class ScrapeConfig():
     """Class to hold scrape config data needed for downloading the html."""
 
-    def __init__(self) -> None:
+    def __init__(self, url) -> None:
+        self.url
         self.proxy_server = ''
         self.javascript = False
         self.next_page_xpath = ''
+        self.useragent = ''
+        self.multipages = False
         self.max_next_pages = sys.maxsize
+        self.next_page_timeout = 1
         # TODO - Define more fields whatever might be needed for scraping
 
 
@@ -43,17 +47,86 @@ class ScrapeResult():
 
     def __init__(self, response):
         """Initialize the Scrape Result."""
-        self._response = response
+        self._response = response               # Selenium Response is different, either subclass or none)
         self.html_pages = []
-
-        for html in response.html:
-            self.html_pages.append(html.html)
-            print(F'ERIC:::"{html.html}"')
+        self.status_code = response.status_code #(Can't get it from Selenium)
+        self.next_page = None
 
     @property
     def result_good(self) -> bool:
         """Check if the result is ok,"""
-        return self._response.status_code == 200
+        return self.status_code == 200
+
+
+
+
+import requests
+from selenium import webdriver
+
+def test_scrape_selenium_chrome(url):
+    with webdriver.Chrome(executable_path=R'D:\temp\chromedriver_win32\chromedriver.exe') as browser:
+        r = browser.get(url)
+        result = ScrapeResult(r)
+        result.html_pages.append(browser.page_source)
+        return result
+
+def test_scrape_selenium_chrome_headless(url):
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('--headless')
+
+
+    with webdriver.Chrome(chrome_options=chrome_options, executable_path=R'D:\temp\chromedriver_win32\chromedriver.exe') as browser:
+        r = browser.get(url)
+        result = ScrapeResult(r)
+        result.html_pages.append(browser.page_source)
+        return result
+
+def test_scrape_requests(url):
+    r = requests.request('get', url)
+    result = ScrapeResult(r)
+    result.html_pages.append(r.text)
+    return result
+
+def test_scrape_html_requests(url):
+    session = requests_html.HTMLSession()
+    r = session.get(url)
+    result = ScrapeResult(r)
+    result.html_pages.append(r.html.html)
+    return result
+
+
+reuse_browser = webdriver.Chrome(executable_path=R'D:\temp\chromedriver_win32\chromedriver.exe')
+chrome_options2 = webdriver.ChromeOptions()
+chrome_options2.add_argument("--headless")
+reuse_browser_headless = webdriver.Chrome(chrome_options=chrome_options2, executable_path=R'D:\temp\chromedriver_win32\chromedriver.exe')
+
+
+def test_scrape_selenium_chrome_reuse(url):
+    r = reuse_browser.get(R'chrome://version/')
+    r = reuse_browser.get(url)
+    result = ScrapeResult(r)
+    result.html_pages.append(reuse_browser.page_source)
+    return result
+
+def test_scrape_selenium_chrome_headless_reuse(url):
+    r = reuse_browser.get(R'chrome://version/')
+    r = reuse_browser_headless.get(url)
+    result = ScrapeResult(r)
+    result.html_pages.append(reuse_browser_headless.page_source)
+    return result
+
+
+
+
+def test_scrape_selenium_chrome_headless_reuse_pass(url, browser):
+    r = browser.get(R'chrome://version/')
+    r = browser.get(url)
+    result = ScrapeResult(r)
+    result.html_pages.append(browser.page_source)
+    return result
+
+
+
 
 '''
 !!! ### SOME PROBLEMS
@@ -61,10 +134,10 @@ class ScrapeResult():
 !!! to use headless chromium and then we don't need html-requests but onlye requests
 !!! but it might be ok for us to do as well, esecially when using Internally and in an
 !!! automated way it should only download once
-!!! 2.) It does not do javascript pagination, so if that is essential maybe use some alternative way
+!!! 2.) It does not do javascript pagination, so if that is essential use selenium for those
 !!! 3.) Selenium uses browser "always?", for HTML pages we might just want to use requests-html
-!!! 
-!!! 
+!!! 4.) Need to check Timinig, Selenium vs Requests vs HTML-Requests
+!!! 5.) The Project should probably be called ezscraper to account for the actual purpose
 '''
 
 def scrape_url(url: str, *, proxy_url: Optional[str] = None,
@@ -75,12 +148,17 @@ def scrape_url(url: str, *, proxy_url: Optional[str] = None,
     response = session.get(url)
     if load_javascript:
         response.html.render(scrolldown=3, sleep=1)
+
+    
+    result = ScrapeResult(response)
     for html in response.html:
-        print('PAGINATION:::', html)
+        result.html_pages.append(html.html)
+        print(F'ERIC:::"{html.html}"')
     print('NEXT PAGE:::', response.html.next())
-    result = Result(response)
 
     return result
+
+
 
 
 def is_local_address(url: str) -> bool:

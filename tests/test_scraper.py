@@ -68,22 +68,79 @@ def test_check_url_local_only_exception(url):
         scraper.check_url(url, local_only=True)
 
 
+
+
+
+########################################
+# Tests for Fuction 
+########################################
+
+
+########################################
+# Tests for Fuction 
+########################################
+
+
+########################################
+# Tests for Fuction 
+########################################
+
+
+########################################
+# Tests for Fuction 
+########################################
+
+
+########################################
+# Tests for Fuction 
+########################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ########################################
 # Tests for Fuction scrape_url
 ########################################
 # Good Download Tests - Single + Multi Page
 GOOD_REQUESTS_PARAM_COMBOS = [
-    #(SERVER_FILE_SINGLE_PAGE_JS, True, True, 1),
-    #(SERVER_FILE_SINGLE_PAGE_JS, False, False, 1),
-    #(SERVER_FILE_SINGLE_PAGE_NO_JS, False, False, 1),
-    #(SERVER_FILE_SINGLE_PAGE_NO_JS, True, False, 1),
+    (SERVER_FILE_SINGLE_PAGE_JS, True, True, 1),
+    (SERVER_FILE_SINGLE_PAGE_JS, False, False, 1),
+    (SERVER_FILE_SINGLE_PAGE_NO_JS, False, False, 1),
+    (SERVER_FILE_SINGLE_PAGE_NO_JS, True, False, 1),
     (SERVER_FILE_MULTI_PAGE_JS_START_GOOD, True, True, 10),
-    #(SERVER_FILE_MULTI_PAGE_JS_START_GOOD, False, False, 1),
-    #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
-    #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
+    (SERVER_FILE_MULTI_PAGE_JS_START_GOOD, False, False, 1),
+    (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
+    (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
     #(R'https://www.us-proxy.org/', True, True, 10) # !!! THIS DOESNT WORK AT ALL, HANGS
 ]
-@pytest.mark.eric
 @pytest.mark.parametrize('url, load_javascript, expect_javascript, page_count', GOOD_REQUESTS_PARAM_COMBOS)
 def test_good_page_requests(url, load_javascript, expect_javascript, page_count):
     # First make sure our local server is reachable
@@ -92,6 +149,7 @@ def test_good_page_requests(url, load_javascript, expect_javascript, page_count)
     # Scrape the Page
     result = scraper.scrape_url(url, load_javascript=load_javascript)
     assert result
+
     assert result.result_good
 
     # The expected number of pages found
@@ -109,6 +167,102 @@ def test_good_page_requests(url, load_javascript, expect_javascript, page_count)
 
         if page_count > 1:
             assert F'THIS IS PAGE {idx+1}/3' in page
+
+
+
+
+
+
+### NEED SOME TESTS TO TEST JAVASCRIPT WAIT FUNCTIONS GENERATING ERRORS, 
+### If requests-html gets udated and it works in the future we can start using that
+
+
+
+
+
+TIMING_COUNTER=1
+TIMING_TEST = [
+    (SERVER_FILE_SINGLE_PAGE_NO_JS),
+    #(SERVER_FILE_SINGLE_PAGE_NO_JS),
+    #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD),
+    #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD)
+]
+
+@pytest.mark.eric
+@pytest.mark.parametrize('url', TIMING_TEST)
+def test_timing_request(url):
+    for x in range(TIMING_COUNTER):
+        r = scraper.test_scrape_requests(url)
+        assert NON_JS_TEST_STRING in r.html_pages[0]
+    assert True
+
+@pytest.mark.eric
+@pytest.mark.parametrize('url', TIMING_TEST)
+def test_timing_html_request(url):
+    for x in range(TIMING_COUNTER):
+        r = scraper.test_scrape_html_requests(url)
+        assert NON_JS_TEST_STRING in r.html_pages[0]
+    assert True
+
+@pytest.mark.eric
+@pytest.mark.parametrize('url', TIMING_TEST)
+def test_timing_selenium_chrome_headless(url):
+    for x in range(TIMING_COUNTER):
+        r = scraper.test_scrape_selenium_chrome_headless(url)
+        assert NON_JS_TEST_STRING in r.html_pages[0]
+    assert True
+'''
+
+@pytest.mark.eric
+@pytest.mark.parametrize('url', TIMING_TEST)
+def test_timing_selenium_chrome(url):
+    for x in range(TIMING_COUNTER):
+        r = scraper.test_scrape_selenium_chrome(url)
+        assert NON_JS_TEST_STRING in r.html_pages[0]
+    assert True
+
+@pytest.mark.eric
+@pytest.mark.parametrize('url', TIMING_TEST)
+def test_timing_selenium_chrome_headless_reuse(url):
+    for x in range(TIMING_COUNTER):
+        r = scraper.test_scrape_selenium_chrome_headless_reuse(url)
+        assert NON_JS_TEST_STRING in r.html_pages[0]
+    assert True
+
+@pytest.mark.eric
+@pytest.mark.parametrize('url', TIMING_TEST)
+def test_timing_selenium_chrome_reuse(url):
+    for x in range(TIMING_COUNTER):
+        r = scraper.test_scrape_selenium_chrome_reuse(url)
+        assert NON_JS_TEST_STRING in r.html_pages[0]
+    assert True
+
+@pytest.mark.eric
+@pytest.mark.parametrize('url', TIMING_TEST)
+def test_timing_selenium_chrome_headless_reuse_pass(url):
+    from selenium import webdriver
+    chrome_options = webdriver.chrome.options.Options()
+    chrome_options.add_argument("--headless")
+
+    with webdriver.Chrome(chrome_options=chrome_options, executable_path=R'D:\temp\chromedriver_win32\chromedriver.exe') as browser:
+        for x in range(TIMING_COUNTER):
+            r = scraper.test_scrape_selenium_chrome_headless_reuse_pass(url, browser)
+            assert NON_JS_TEST_STRING in r.html_pages[0]
+        assert True
+'''
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Download Tests - Multi-Page
@@ -184,28 +338,28 @@ def test_good_page_requests(url, load_javascript, expect_javascript, page_count)
 
 
 
-################################
-# Tests for Custom Exceptions
-################################
+########################################
+# Tests for Exception ScrapeError
+########################################
 
 
-################################
+########################################
+# Tests for Exception MultiPageError
+########################################
+
+
+
+########################################
 # Tests for Class ScrapeConfig
-################################
-
-
-
-################################
-# Tests for Class DownloadResult
-################################
+########################################
 
 
 
 
 
-################################
+########################################
 # Tests for Fuction download_url
-################################
+########################################
 
 
 
