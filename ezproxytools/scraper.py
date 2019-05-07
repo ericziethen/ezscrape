@@ -18,6 +18,77 @@ SPECIAL_LOCAL_ADDRESSES = [
     '127.1'
 ]
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############################################################
+#
+###### OLD IMPLEMENTATION - REFACTOR
+#
+##############################################################
+
+
+
+
+
+
 class ScrapeError(Exception):
     """Generic Page Scrape Error."""
 
@@ -94,12 +165,12 @@ def test_scrape_html_requests(url):
     result.html_pages.append(r.html.html)
     return result
 
-
+'''
 reuse_browser = webdriver.Chrome(executable_path=R'D:\temp\chromedriver_win32\chromedriver.exe')
 chrome_options2 = webdriver.ChromeOptions()
 chrome_options2.add_argument("--headless")
 reuse_browser_headless = webdriver.Chrome(chrome_options=chrome_options2, executable_path=R'D:\temp\chromedriver_win32\chromedriver.exe')
-
+'''
 
 def test_scrape_selenium_chrome_reuse(url):
     r = reuse_browser.get(R'chrome://version/')
@@ -147,14 +218,16 @@ def scrape_url(url: str, *, proxy_url: Optional[str] = None,
     session = requests_html.HTMLSession()
     response = session.get(url)
     if load_javascript:
-        response.html.render(scrolldown=3, sleep=1)
+        response.html.render()
 
     
     result = ScrapeResult(response)
     for html in response.html:
+        if load_javascript:
+            html.render()
         result.html_pages.append(html.html)
-        print(F'ERIC:::"{html.html}"')
-    print('NEXT PAGE:::', response.html.next())
+        #print(F'ERIC:::"{html.html}"')
+    #print('NEXT PAGE:::', response.html.next())
 
     return result
 

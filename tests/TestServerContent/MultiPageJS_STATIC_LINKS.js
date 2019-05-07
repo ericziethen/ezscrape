@@ -5,7 +5,7 @@ function gotoPage(num) {
 }
 
 function loadContent(num) {
-    document.getElementById("content").innerHTML = "THIS IS PAGE " + num + "/3";
+    document.getElementById("content").innerHTML = "THIS IS PAGE " + num + "/4";
 }
 
 

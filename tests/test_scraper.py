@@ -16,6 +16,74 @@ SERVER_FILE_MULTI_PAGE_JS_STATIC_LINKS_01 = urljoin(LOCAL_SERVER_HTTP, 'MultiPag
 JS_TEST_STRING = 'LOADED-Javascript Line'
 NON_JS_TEST_STRING = 'NON-Javascript Line'
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##############################################################
+#
+###### OLD IMPLEMENTATION - REFACTOR
+#
+##############################################################
+
+
+
+
 ########################################
 # Tests for Fuction is_local_address
 ########################################
@@ -136,8 +204,9 @@ GOOD_REQUESTS_PARAM_COMBOS = [
     (SERVER_FILE_SINGLE_PAGE_JS, False, False, 1),
     (SERVER_FILE_SINGLE_PAGE_NO_JS, False, False, 1),
     (SERVER_FILE_SINGLE_PAGE_NO_JS, True, False, 1),
-    (SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, True, True, 10),
-    (SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, False, False, 1),
+    (SERVER_FILE_MULTI_PAGE_JS_STATIC_LINKS_01, True, True, 4),
+    #(SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, True, True, 10),  ONLY WORKING IN SELENIUM
+    #(SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, False, False, 1),  ONLY WORKING IN SELENIUM
     (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
     (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
     #(R'https://www.us-proxy.org/', True, True, 10) # !!! THIS DOESNT WORK AT ALL, HANGS
@@ -189,6 +258,7 @@ TIMING_TEST = [
     #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD)
 ]
 
+'''
 @pytest.mark.eric
 @pytest.mark.parametrize('url', TIMING_TEST)
 def test_timing_request(url):
@@ -212,7 +282,6 @@ def test_timing_selenium_chrome_headless(url):
         r = scraper.test_scrape_selenium_chrome_headless(url)
         assert NON_JS_TEST_STRING in r.html_pages[0]
     assert True
-'''
 
 @pytest.mark.eric
 @pytest.mark.parametrize('url', TIMING_TEST)
