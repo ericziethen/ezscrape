@@ -9,6 +9,7 @@ import scraper
 LOCAL_SERVER_HTTP = R'http://127.0.0.1:8000'
 
 SERVER_FILE_SINGLE_PAGE_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS.html')
+SERVER_FILE_SINGLE_PAGE_JS_DELAYED = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS_Delayed.html')
 SERVER_FILE_SINGLE_PAGE_NO_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageNoJS.html')
 SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_DynamicLinks.html')
 SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD = urljoin(LOCAL_SERVER_HTTP, 'MultiPageNoJS_1.html')
@@ -136,28 +137,34 @@ def test_check_url_local_only_exception(url):
     with pytest.raises(ValueError):
         scraper.check_url(url, local_only=True)
 
-
-
-
-
 ########################################
-# Tests for Fuction 
+# Tests for scrape_url_requests()
 ########################################
 
 
 ########################################
-# Tests for Fuction 
+# Tests for scrape_url_requests_html()
 ########################################
 
 
 ########################################
-# Tests for Fuction 
+# Tests for scrape_url_selenium_chrome()
 ########################################
 
 
 ########################################
-# Tests for Fuction 
+# Tests for scrape_url
 ########################################
+
+
+
+
+
+
+
+
+
+
 
 
 ########################################
@@ -239,7 +246,37 @@ def test_good_page_requests(url, load_javascript, expect_javascript, page_count)
             assert F'THIS IS PAGE {idx+1}/{page_count}' in page
 
 
+DELAYED_GOOD_REQUESTS_PARAM_COMBOS = [
+    (SERVER_FILE_SINGLE_PAGE_JS_DELAYED, True, True, 1, 4),
+    (SERVER_FILE_SINGLE_PAGE_JS_DELAYED, False, False, 1, 4)
+]
+@pytest.mark.slow
+@pytest.mark.parametrize('url, load_javascript, expect_javascript, page_count, wait_time', DELAYED_GOOD_REQUESTS_PARAM_COMBOS)
+def test_delayed_good_page_requests(url, load_javascript, expect_javascript, page_count, wait_time):
+    # First make sure our local server is reachable
+    assert scraper.check_url(LOCAL_SERVER_HTTP, local_only=True)
 
+    # Scrape the Page
+    result = scraper.scrape_url(url, load_javascript=load_javascript, wait=wait_time)
+    assert result
+
+    assert result.result_good
+
+    # The expected number of pages found
+    assert len(result.html_pages) == page_count
+
+    # Search String Found
+    for idx, page in enumerate(result.html_pages):
+        print(F'CHECK PAGE: {idx}, page: "{page}"')
+        assert NON_JS_TEST_STRING in page
+
+        if expect_javascript:
+            assert JS_TEST_STRING in page
+        else:
+            assert JS_TEST_STRING not in page
+
+        if page_count > 1:
+            assert F'THIS IS PAGE {idx+1}/{page_count}' in page
 
 
 

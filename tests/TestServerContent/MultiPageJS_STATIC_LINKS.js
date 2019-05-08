@@ -8,7 +8,7 @@ function setUrl(pageNum, title, id) {
     var a = document.createElement('a');
     var linkText = document.createTextNode(title);
     a.appendChild(linkText);
-    a.title = id;
+    a.title = id + " ";
     if(pageNum == null){
         url = "javascript:"
         url = ""
@@ -26,20 +26,20 @@ function loadContent(currentPage) {
     document.getElementById("content2").innerHTML = "LOADED-Javascript Line";
 
     if(currentPage <= 1) {
-        setUrl(null, "prev ", "prev")
+        setUrl(null, "prev", "prev")
     }
     else {
-        setUrl(currentPage-1, "prev ", "prev")
+        setUrl(currentPage-1, "prev", "prev")
     }
-    setUrl(1, "1 ", "page1");
-    setUrl(2, "2 ", "page2");
-    setUrl(3, "3 ", "page3");
-    setUrl(4, "4 ", "page4");
+    setUrl(1, "1", "page1");
+    setUrl(2, "2", "page2");
+    setUrl(3, "3", "page3");
+    setUrl(4, "4", "page4");
     if(currentPage >= max_pages) {
-        setUrl(null, "next ", "next")
+        setUrl(null, "next", "next")
     }
     else {
-        setUrl(currentPage+1, "next ", "next")
+        setUrl(currentPage+1, "next", "next")
     }
 }
 

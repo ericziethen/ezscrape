@@ -17,12 +17,77 @@ SPECIAL_LOCAL_ADDRESSES = [
     '0.0',
     '127.1'
 ]
+'''
+class ScrapeError(Exception):
+    """Generic Page Scrape Error."""
 
 
+class SeleniumChromeSession():
+    """Context Manager for a Selenium Chrome Session."""
 
 
+class ScrapeConfig():
+    """Class to hold scrape config data needed for downloading the html."""
 
 
+class ScrapeResult():
+    """Class to keep the Download Result Data."""
+
+
+def _scrape_url_requests(config: ScrapeConfig) -> ScrapeResult:
+    """Scrape using Requests."""
+    raise NotImplementedError
+
+def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
+    """Scrape using Requests-HTML."""
+    raise NotImplementedError
+
+
+def _scrape_url_selenium_chrome(config: ScrapeConfig,
+                                browser=None) -> ScrapeResult:
+    """Scrape using Selenium with Chrome."""
+    raise NotImplementedError
+
+def scrape_url(config: ScrapeConfig) -> ScrapeResult:
+    """Generic function to handle all scraping requests."""
+    raise NotImplementedError
+'''
+
+def is_local_address(url: str) -> bool:
+    """Simple check whether the given url is a local address."""
+    # Parse the URL
+    result = urllib.parse.urlparse(url)
+    addr = result.netloc
+    if not addr:
+        addr = result.path
+    addr = addr.split(':')[0].lower()
+
+    # Check if it is a special local address
+    if addr in SPECIAL_LOCAL_ADDRESSES:
+        return True
+
+    # Check the Ip Range
+    is_private = False
+    try:
+        is_private = ipaddress.ip_address(addr).is_private
+    except ValueError:
+        is_private = False
+    return is_private
+
+
+def check_url(url: str, *, local_only: bool) -> bool:
+    """Check if the Local url is reachable."""
+    if local_only and (not is_local_address(url)):
+        raise ValueError('Url is not a local address')
+
+    try:
+        with urllib.request.urlopen(url) as result:
+            code = result.getcode()
+        if code == 200:
+            return True
+    except urllib.error.URLError:
+        return False
+    return False
 
 
 
@@ -88,13 +153,10 @@ SPECIAL_LOCAL_ADDRESSES = [
 
 
 
-
+'''
+'''
 class ScrapeError(Exception):
     """Generic Page Scrape Error."""
-
-
-class MultiPageError(ScrapeError):
-    """Exception when failed to download all pages."""
 
 
 class ScrapeConfig():
@@ -110,7 +172,6 @@ class ScrapeConfig():
         self.max_next_pages = sys.maxsize
         self.next_page_timeout = 1
         # TODO - Define more fields whatever might be needed for scraping
-
 
 
 class ScrapeResult():
@@ -129,8 +190,7 @@ class ScrapeResult():
         return self.status_code == 200
 
 
-
-
+'''
 import requests
 from selenium import webdriver
 
@@ -164,14 +224,14 @@ def test_scrape_html_requests(url):
     result = ScrapeResult(r)
     result.html_pages.append(r.html.html)
     return result
-
+'''
 '''
 reuse_browser = webdriver.Chrome(executable_path=R'D:\temp\chromedriver_win32\chromedriver.exe')
 chrome_options2 = webdriver.ChromeOptions()
 chrome_options2.add_argument("--headless")
 reuse_browser_headless = webdriver.Chrome(chrome_options=chrome_options2, executable_path=R'D:\temp\chromedriver_win32\chromedriver.exe')
 '''
-
+'''
 def test_scrape_selenium_chrome_reuse(url):
     r = reuse_browser.get(R'chrome://version/')
     r = reuse_browser.get(url)
@@ -195,7 +255,7 @@ def test_scrape_selenium_chrome_headless_reuse_pass(url, browser):
     result = ScrapeResult(r)
     result.html_pages.append(browser.page_source)
     return result
-
+'''
 
 
 
@@ -210,63 +270,26 @@ def test_scrape_selenium_chrome_headless_reuse_pass(url, browser):
 !!! 4.) Need to check Timinig, Selenium vs Requests vs HTML-Requests
 !!! 5.) The Project should probably be called ezscraper to account for the actual purpose
 '''
-
-def scrape_url(url: str, *, proxy_url: Optional[str] = None,
+'''
+'''
+def scrape_url(url: str, *, proxy_url: Optional[str] = None, wait: float = 0,
                load_javascript: bool = False) -> ScrapeResult:
     """Download the given url with the given proxy if specified."""
 
     session = requests_html.HTMLSession()
     response = session.get(url)
     if load_javascript:
-        response.html.render()
+        response.html.render(wait=wait)
 
     
     result = ScrapeResult(response)
     print('INITIAL NEXT PAGE:::', response.html.next())
     for html in response.html:
         if load_javascript:
-            html.render()
+            html.render(wait=wait)
         result.html_pages.append(html.html)
         print(F'ERIC:::"{html.html}"')
         print('NEXT PAGE:::', html.next())
 
     return result
 
-
-
-
-def is_local_address(url: str) -> bool:
-    """Simple check whether the given url is a local address."""
-    # Parse the URL
-    result = urllib.parse.urlparse(url)
-    addr = result.netloc
-    if not addr:
-        addr = result.path
-    addr = addr.split(':')[0].lower()
-
-    # Check if it is a special local address
-    if addr in SPECIAL_LOCAL_ADDRESSES:
-        return True
-
-    # Check the Ip Range
-    is_private = False
-    try:
-        is_private = ipaddress.ip_address(addr).is_private
-    except ValueError:
-        is_private = False
-    return is_private
-
-
-def check_url(url: str, *, local_only: bool) -> bool:
-    """Check if the Local url is reachable."""
-    if local_only and (not is_local_address(url)):
-        raise ValueError('Url is not a local address')
-
-    try:
-        with urllib.request.urlopen(url) as result:
-            code = result.getcode()
-        if code == 200:
-            return True
-    except urllib.error.URLError:
-        return False
-    return False
