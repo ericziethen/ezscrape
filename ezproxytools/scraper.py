@@ -222,12 +222,13 @@ def scrape_url(url: str, *, proxy_url: Optional[str] = None,
 
     
     result = ScrapeResult(response)
+    print('INITIAL NEXT PAGE:::', response.html.next())
     for html in response.html:
         if load_javascript:
             html.render()
         result.html_pages.append(html.html)
-        #print(F'ERIC:::"{html.html}"')
-    #print('NEXT PAGE:::', response.html.next())
+        print(F'ERIC:::"{html.html}"')
+        print('NEXT PAGE:::', html.next())
 
     return result
 

@@ -236,7 +236,7 @@ def test_good_page_requests(url, load_javascript, expect_javascript, page_count)
             assert JS_TEST_STRING not in page
 
         if page_count > 1:
-            assert F'THIS IS PAGE {idx+1}/3' in page
+            assert F'THIS IS PAGE {idx+1}/{page_count}' in page
 
 
 
