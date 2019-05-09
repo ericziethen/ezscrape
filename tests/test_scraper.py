@@ -9,113 +9,14 @@ import scraper
 
 LOCAL_SERVER_HTTP = R'http://127.0.0.1:8000'
 
-SERVER_FILE_SINGLE_PAGE_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS.html')
-SERVER_FILE_SINGLE_PAGE_JS_DELAYED = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS_Delayed.html')
-SERVER_FILE_SINGLE_PAGE_NO_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageNoJS.html')
-SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_DynamicLinks.html')
-SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD = urljoin(LOCAL_SERVER_HTTP, 'MultiPageNoJS_1.html')
-SERVER_FILE_MULTI_PAGE_JS_STATIC_LINKS_01 = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_STATIC_LINKS_1.html')
+URL_SINGLE_PAGE_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS.html')
+URL_SINGLE_PAGE_JS_DELAYED = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS_Delayed.html')
+URL_SINGLE_PAGE_NO_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageNoJS.html')
+URL_MULTI_PAGE_JS_DYNAMIC_LINKS = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_DynamicLinks.html')
+URL_MULTI_PAGE_NO_JS_START_GOOD = urljoin(LOCAL_SERVER_HTTP, 'MultiPageNoJS_1.html')
+URL_MULTI_PAGE_JS_STATIC_LINKS_01 = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_STATIC_LINKS_1.html')
 JS_TEST_STRING = 'LOADED-Javascript Line'
 NON_JS_TEST_STRING = 'NON-Javascript Line'
-
-
-
-########################################
-# Tests for Class ScrapeConfig 
-########################################
-
-def test_valid_scrape_config():
-    url = 'fake_url'
-    config = scraper.ScrapeConfig(url)
-    assert config.request_timeout == 10
-    assert config.proxy_server == None
-    assert config.javascript == False
-    assert config.javascript_wait == 0
-    assert config.useragent == None
-    assert config.next_page_elem_xpath == None
-    assert config.max_next_pages == sys.maxint
-    assert config.next_page_timeout == 0
-
-    config.request_timeout=30
-    config.proxy_server='fake_proxy:fake_port'
-    config.javascript=True
-    config.javascript_wait=5
-    config.useragent='agent'
-    config.next_page_elem_xpath='xpath'
-    config.max_next_pages=15
-    config.next_page_timeout=4
-
-    assert config.url == url
-
-@pytest.mark.parametrize('invalid_url', [None, '', 15])
-def test_invalid_scrape_config(invalid_url):
-    with pytest.raises(scraper.ScrapeConfigError):
-        scraper.ScrapeConfig(invalid_url)
-
-    valid_config = scraper.ScrapeConfig('valid_url')
-    with pytest.raises(scraper.ScrapeConfigError):
-        valid_config.url = invalid_url
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-##############################################################
-#
-###### OLD IMPLEMENTATION - REFACTOR
-#
-##############################################################
-
-
 
 
 ########################################
@@ -170,9 +71,68 @@ def test_check_url_local_only_exception(url):
     with pytest.raises(ValueError):
         scraper.check_url(url, local_only=True)
 
+
+########################################
+# Tests for Class ScrapeConfig 
+########################################
+
+def test_valid_scrape_config():
+    url = 'fake_url'
+    config = scraper.ScrapeConfig(url)
+    assert config.request_timeout == 10
+    assert config.proxy_server == None
+    assert config.javascript == False
+    assert config.javascript_wait == 0
+    assert config.useragent == None
+    assert config.next_page_elem_xpath == None
+    assert config.max_next_pages == sys.maxsize
+    assert config.next_page_timeout == 0
+
+    config.request_timeout = 30
+    config.proxy_server = 'fake_proxy:fake_port'
+    config.javascript = True
+    config.javascript_wait = 5
+    config.useragent = 'agent'
+    config.next_page_elem_xpath = 'xpath'
+    config.max_next_pages = 15
+    config.next_page_timeout = 4
+
+    assert config.url == url
+
+@pytest.mark.parametrize('invalid_url', [None, '', 15])
+def test_invalid_scrape_config(invalid_url):
+    with pytest.raises(scraper.ScrapeConfigError):
+        scraper.ScrapeConfig(invalid_url)
+
+    valid_config = scraper.ScrapeConfig('valid_url')
+    with pytest.raises(scraper.ScrapeConfigError):
+        valid_config.url = invalid_url
+
 ########################################
 # Tests for scrape_url_requests()
 ########################################
+# Parameter Issues
+
+
+# Good Scrape Tests
+REQUESTS_GOOD_URLS = [
+    (URL_SINGLE_PAGE_NO_JS)
+]
+@pytest.mark.parametrize('url', REQUESTS_GOOD_URLS)
+def test_requests_good_scrape(url):
+    config = scraper.ScrapeConfig(url)
+    resp = scraper._scrape_url_requests(config)
+
+    assert resp.success == True
+    assert resp.error_msg == None
+    assert len(resp.html_pages) == 1
+
+# Scrape Issues
+
+
+
+
+
 
 
 ########################################
@@ -193,9 +153,6 @@ def test_check_url_local_only_exception(url):
 ########################################
 # Tests for scrape_url()
 ########################################
-
-
-
 
 ########################################
 # Tests for Class SeleniumChromeSession 
@@ -232,20 +189,80 @@ def test_check_url_local_only_exception(url):
 
 
 
+
+
+
+
+
+
+
+
+
+
+##############################################################
+#
+###### OLD IMPLEMENTATION - REFACTOR
+#
+##############################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ########################################
 # Tests for Fuction scrape_url
 ########################################
 # Good Download Tests - Single + Multi Page
+'''
 GOOD_REQUESTS_PARAM_COMBOS = [
-    (SERVER_FILE_SINGLE_PAGE_JS, True, True, 1),
-    (SERVER_FILE_SINGLE_PAGE_JS, False, False, 1),
-    (SERVER_FILE_SINGLE_PAGE_NO_JS, False, False, 1),
-    (SERVER_FILE_SINGLE_PAGE_NO_JS, True, False, 1),
-    (SERVER_FILE_MULTI_PAGE_JS_STATIC_LINKS_01, True, True, 4),
-    (SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, True, True, 10),
-    (SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, False, False, 1),
-    (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
-    (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
+    (URL_SINGLE_PAGE_JS, True, True, 1),
+    (URL_SINGLE_PAGE_JS, False, False, 1),
+    (URL_SINGLE_PAGE_NO_JS, False, False, 1),
+    (URL_SINGLE_PAGE_NO_JS, True, False, 1),
+    (URL_MULTI_PAGE_JS_STATIC_LINKS_01, True, True, 4),
+    (URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True, True, 10),
+    (URL_MULTI_PAGE_JS_DYNAMIC_LINKS, False, False, 1),
+    (URL_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
+    (URL_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
 ]
 @pytest.mark.parametrize('url, load_javascript, expect_javascript, page_count', GOOD_REQUESTS_PARAM_COMBOS)
 def test_good_page_requests(url, load_javascript, expect_javascript, page_count):
@@ -273,11 +290,12 @@ def test_good_page_requests(url, load_javascript, expect_javascript, page_count)
 
         if page_count > 1:
             assert F'THIS IS PAGE {idx+1}/{page_count}' in page
+'''
 
-
+'''
 DELAYED_GOOD_REQUESTS_PARAM_COMBOS = [
-    (SERVER_FILE_SINGLE_PAGE_JS_DELAYED, True, True, 1, 4),
-    (SERVER_FILE_SINGLE_PAGE_JS_DELAYED, False, False, 1, 4)
+    (URL_SINGLE_PAGE_JS_DELAYED, True, True, 1, 4),
+    (URL_SINGLE_PAGE_JS_DELAYED, False, False, 1, 4)
 ]
 @pytest.mark.slow
 @pytest.mark.parametrize('url, load_javascript, expect_javascript, page_count, wait_time', DELAYED_GOOD_REQUESTS_PARAM_COMBOS)
@@ -306,7 +324,7 @@ def test_delayed_good_page_requests(url, load_javascript, expect_javascript, pag
 
         if page_count > 1:
             assert F'THIS IS PAGE {idx+1}/{page_count}' in page
-
+'''
 
 
 ### NEED SOME TESTS TO TEST JAVASCRIPT WAIT FUNCTIONS GENERATING ERRORS, 
@@ -318,10 +336,10 @@ def test_delayed_good_page_requests(url, load_javascript, expect_javascript, pag
 
 TIMING_COUNTER=1
 TIMING_TEST = [
-    (SERVER_FILE_SINGLE_PAGE_NO_JS),
-    #(SERVER_FILE_SINGLE_PAGE_NO_JS),
-    #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD),
-    #(SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD)
+    (URL_SINGLE_PAGE_NO_JS),
+    #(URL_SINGLE_PAGE_NO_JS),
+    #(URL_MULTI_PAGE_NO_JS_START_GOOD),
+    #(URL_MULTI_PAGE_NO_JS_START_GOOD)
 ]
 
 '''

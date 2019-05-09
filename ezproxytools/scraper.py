@@ -31,6 +31,27 @@ class SeleniumChromeSession():
 class ScrapeConfig():
     """Class to hold scrape config data needed for downloading the html."""
 
+    def __init__(self, url: str):
+        """Initialize a default scrape config with the given url."""
+        self.url = url
+        self.request_timeout = 10
+        self.proxy_server = None
+        self.javascript = False
+        self.javascript_wait = 0
+        self.useragent = None
+        self.next_page_elem_xpath = None
+        self.max_next_pages = sys.maxsize
+        self.next_page_timeout = 0
+
+    @property
+    def url(self):
+        return self._url
+
+    @url.setter
+    def url(self, new_url: str):
+        if (not new_url) or (not isinstance(new_url, str)):
+            raise ScrapeConfigError('Url cannot be blank')
+        self._url = new_url
 
 class ScrapeResult():
     """Class to keep the Download Result Data."""
