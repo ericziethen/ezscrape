@@ -4,11 +4,10 @@
 
 import ipaddress
 import os
+import requests
 import requests_html
 import sys
-import urllib.error
 import urllib.parse
-import urllib.request
 
 from typing import Optional
 
@@ -55,11 +54,23 @@ class ScrapeConfig():
 
 class ScrapeResult():
     """Class to keep the Download Result Data."""
+    
+    def __init__(self, url: str, success: bool):
+        """Initialize the Scrape Result."""
+        self.url = url
+        self.success = success
+        self.html_pages = []
+        self.error_msg = None
 
+    def add_html_page (self, page):
+        self.html_pages.append(page)
 
 def _scrape_url_requests(config: ScrapeConfig) -> ScrapeResult:
     """Scrape using Requests."""
-    raise NotImplementedError
+    r = requests.request('get', config.url)
+    result = ScrapeResult(config.url, True)
+    result.add_html_page(r.text)
+    return result
 
 def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
     """Scrape using Requests-HTML."""
@@ -102,14 +113,10 @@ def check_url(url: str, *, local_only: bool) -> bool:
     if local_only and (not is_local_address(url)):
         raise ValueError('Url is not a local address')
 
-    try:
-        with urllib.request.urlopen(url) as result:
-            code = result.getcode()
-        if code == 200:
-            return True
-    except urllib.error.URLError:
-        return False
-    return False
+    config = ScrapeConfig(url)
+    resp = _scrape_url_requests(url)
+    return resp.status_code == 200
+
 
 
 
