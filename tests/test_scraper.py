@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import pytest
+import sys
 
 from urllib.parse import urljoin
 
@@ -19,9 +20,41 @@ NON_JS_TEST_STRING = 'NON-Javascript Line'
 
 
 
+########################################
+# Tests for Class ScrapeConfig 
+########################################
 
+def test_valid_scrape_config():
+    url = 'fake_url'
+    config = scraper.ScrapeConfig(url)
+    assert config.request_timeout == 10
+    assert config.proxy_server == None
+    assert config.javascript == False
+    assert config.javascript_wait == 0
+    assert config.useragent == None
+    assert config.next_page_elem_xpath == None
+    assert config.max_next_pages == sys.maxint
+    assert config.next_page_timeout == 0
 
+    config.request_timeout=30
+    config.proxy_server='fake_proxy:fake_port'
+    config.javascript=True
+    config.javascript_wait=5
+    config.useragent='agent'
+    config.next_page_elem_xpath='xpath'
+    config.max_next_pages=15
+    config.next_page_timeout=4
 
+    assert config.url == url
+
+@pytest.mark.parametrize('invalid_url', [None, '', 15])
+def test_invalid_scrape_config(invalid_url):
+    with pytest.raises(scraper.ScrapeConfigError):
+        scraper.ScrapeConfig(invalid_url)
+
+    valid_config = scraper.ScrapeConfig('valid_url')
+    with pytest.raises(scraper.ScrapeConfigError):
+        valid_config.url = invalid_url
 
 
 
@@ -153,22 +186,19 @@ def test_check_url_local_only_exception(url):
 
 
 ########################################
-# Tests for scrape_url
+# Tests for scrape_url()
+########################################
+
+
+########################################
+# Tests for scrape_url()
 ########################################
 
 
 
 
-
-
-
-
-
-
-
-
 ########################################
-# Tests for Fuction 
+# Tests for Class SeleniumChromeSession 
 ########################################
 
 
@@ -212,11 +242,10 @@ GOOD_REQUESTS_PARAM_COMBOS = [
     (SERVER_FILE_SINGLE_PAGE_NO_JS, False, False, 1),
     (SERVER_FILE_SINGLE_PAGE_NO_JS, True, False, 1),
     (SERVER_FILE_MULTI_PAGE_JS_STATIC_LINKS_01, True, True, 4),
-    #(SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, True, True, 10),  ONLY WORKING IN SELENIUM
-    #(SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, False, False, 1),  ONLY WORKING IN SELENIUM
+    (SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, True, True, 10),
+    (SERVER_FILE_MULTI_PAGE_JS_DYNAMIC_LINKS, False, False, 1),
     (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
     (SERVER_FILE_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
-    #(R'https://www.us-proxy.org/', True, True, 10) # !!! THIS DOESNT WORK AT ALL, HANGS
 ]
 @pytest.mark.parametrize('url, load_javascript, expect_javascript, page_count', GOOD_REQUESTS_PARAM_COMBOS)
 def test_good_page_requests(url, load_javascript, expect_javascript, page_count):

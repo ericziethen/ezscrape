@@ -17,10 +17,12 @@ SPECIAL_LOCAL_ADDRESSES = [
     '0.0',
     '127.1'
 ]
-'''
 class ScrapeError(Exception):
     """Generic Page Scrape Error."""
 
+
+class ScrapeConfigError(ScrapeError):
+    """Error with the Scrape Config."""
 
 class SeleniumChromeSession():
     """Context Manager for a Selenium Chrome Session."""
@@ -51,7 +53,6 @@ def _scrape_url_selenium_chrome(config: ScrapeConfig,
 def scrape_url(config: ScrapeConfig) -> ScrapeResult:
     """Generic function to handle all scraping requests."""
     raise NotImplementedError
-'''
 
 def is_local_address(url: str) -> bool:
     """Simple check whether the given url is a local address."""
@@ -154,7 +155,6 @@ def check_url(url: str, *, local_only: bool) -> bool:
 
 
 '''
-'''
 class ScrapeError(Exception):
     """Generic Page Scrape Error."""
 
@@ -189,6 +189,7 @@ class ScrapeResult():
         """Check if the result is ok,"""
         return self.status_code == 200
 
+'''
 
 '''
 import requests
@@ -271,7 +272,6 @@ def test_scrape_selenium_chrome_headless_reuse_pass(url, browser):
 !!! 5.) The Project should probably be called ezscraper to account for the actual purpose
 '''
 '''
-'''
 def scrape_url(url: str, *, proxy_url: Optional[str] = None, wait: float = 0,
                load_javascript: bool = False) -> ScrapeResult:
     """Download the given url with the given proxy if specified."""
@@ -293,3 +293,4 @@ def scrape_url(url: str, *, proxy_url: Optional[str] = None, wait: float = 0,
 
     return result
 
+'''
