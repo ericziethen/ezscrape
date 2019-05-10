@@ -38,6 +38,7 @@ class ScrapeConfig():
         self.javascript = False
         self.javascript_wait = 0
         self.useragent = None
+        self.multi_page = False
         self.next_page_elem_xpath = None
         self.max_next_pages = sys.maxsize
         self.next_page_timeout = 0
@@ -65,11 +66,24 @@ class ScrapeResult():
     def add_html_page (self, page):
         self.html_pages.append(page)
 
+
+def _validate_config_for_requests(config: ScrapeConfig):
+    """Check if Requests can handle this config."""
+    if config.javascript:
+        raise ScrapeConfigError("No Support for Javascript")
+
+    if (config.multi_page or
+            (config.next_page_elem_xpath is not None)):
+        raise ScrapeConfigError("No Support for Multipages, check fields")
+
+
 def _scrape_url_requests(config: ScrapeConfig) -> ScrapeResult:
     """Scrape using Requests."""
-    r = requests.request('get', config.url)
-    result = ScrapeResult(config.url, True)
-    result.add_html_page(r.text)
+    _validate_config_for_requests(config)
+
+    resp = requests.request('get', config.url)
+    result = ScrapeResult(config.url, resp.status_code == 200)
+    result.add_html_page(resp.text)
     return result
 
 def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
@@ -114,8 +128,8 @@ def check_url(url: str, *, local_only: bool) -> bool:
         raise ValueError('Url is not a local address')
 
     config = ScrapeConfig(url)
-    resp = _scrape_url_requests(url)
-    return resp.status_code == 200
+    result = _scrape_url_requests(config)
+    return result.success
 
 
 

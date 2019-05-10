@@ -9,14 +9,17 @@ import scraper
 
 LOCAL_SERVER_HTTP = R'http://127.0.0.1:8000'
 
+JS_TEST_STRING = 'LOADED-Javascript Line'
+NON_JS_TEST_STRING = 'NON-Javascript Line'
 URL_SINGLE_PAGE_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS.html')
 URL_SINGLE_PAGE_JS_DELAYED = urljoin(LOCAL_SERVER_HTTP, 'SinglePageJS_Delayed.html')
 URL_SINGLE_PAGE_NO_JS = urljoin(LOCAL_SERVER_HTTP, 'SinglePageNoJS.html')
 URL_MULTI_PAGE_JS_DYNAMIC_LINKS = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_DynamicLinks.html')
 URL_MULTI_PAGE_NO_JS_START_GOOD = urljoin(LOCAL_SERVER_HTTP, 'MultiPageNoJS_1.html')
 URL_MULTI_PAGE_JS_STATIC_LINKS_01 = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_STATIC_LINKS_1.html')
-JS_TEST_STRING = 'LOADED-Javascript Line'
-NON_JS_TEST_STRING = 'NON-Javascript Line'
+
+URL_BAD_URL = 'this is not a url'
+URL_URL_NOT_ONLINE = urljoin(LOCAL_SERVER_HTTP, 'UrlNotFound.html')
 
 
 ########################################
@@ -87,6 +90,7 @@ def test_valid_scrape_config():
     assert config.next_page_elem_xpath == None
     assert config.max_next_pages == sys.maxsize
     assert config.next_page_timeout == 0
+    assert config.multi_page == False
 
     config.request_timeout = 30
     config.proxy_server = 'fake_proxy:fake_port'
@@ -96,6 +100,7 @@ def test_valid_scrape_config():
     config.next_page_elem_xpath = 'xpath'
     config.max_next_pages = 15
     config.next_page_timeout = 4
+    config.multi_page = False
 
     assert config.url == url
 
@@ -108,10 +113,27 @@ def test_invalid_scrape_config(invalid_url):
     with pytest.raises(scraper.ScrapeConfigError):
         valid_config.url = invalid_url
 
+
 ########################################
 # Tests for scrape_url_requests()
 ########################################
 # Parameter Issues
+REQUESTS_BAD_CONFIG = [
+    (URL_SINGLE_PAGE_NO_JS, True, False, False),
+    (URL_SINGLE_PAGE_NO_JS, False, True, False),
+    (URL_SINGLE_PAGE_NO_JS, False, False, True)
+]
+@pytest.mark.parametrize('url, javascript, next_page_elem_xpath, multi_page', REQUESTS_BAD_CONFIG)
+def test_requests_invalid_config(url, javascript, next_page_elem_xpath, multi_page):
+    config = scraper.ScrapeConfig(url)
+    config.javascript = javascript
+    config.next_page_elem_xpath = next_page_elem_xpath
+    config.multi_page = multi_page
+
+    # Don't need to check next_page_elem_xpath or max_next_pages, they alone dont trigger multipages
+
+    with pytest.raises(scraper.ScrapeConfigError):
+        resp = scraper._scrape_url_requests(config)
 
 
 # Good Scrape Tests
@@ -120,6 +142,9 @@ REQUESTS_GOOD_URLS = [
 ]
 @pytest.mark.parametrize('url', REQUESTS_GOOD_URLS)
 def test_requests_good_scrape(url):
+    # First make sure our local server is reachable
+    assert scraper.check_url(LOCAL_SERVER_HTTP, local_only=True)
+
     config = scraper.ScrapeConfig(url)
     resp = scraper._scrape_url_requests(config)
 
@@ -128,8 +153,14 @@ def test_requests_good_scrape(url):
     assert len(resp.html_pages) == 1
 
 # Scrape Issues
-
-
+REQUESTS_BAD_URLS = [
+    ()
+]
+@pytest.mark.parametrize('url', REQUESTS_BAD_URLS)
+def test_requests_bad_scrape(url):
+    # First make sure our local server is reachable
+    #assert scraper.check_url(LOCAL_SERVER_HTTP, local_only=True)
+    pass
 
 
 
