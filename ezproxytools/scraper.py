@@ -2,6 +2,8 @@
 
 """Provide Website downloading functionality."""
 
+import datetime
+import http
 import ipaddress
 import os
 import requests
@@ -10,6 +12,10 @@ import sys
 import urllib.parse
 
 from typing import Optional
+
+DEFAULT_REQUEST_TIMEOUT = 5.0
+DEFAULT_NEXT_PAGE_TIMEOUT = 3
+DEFAULT_JAVASCRIPT_WAIT = 5
 
 SPECIAL_LOCAL_ADDRESSES = [
     'localhost',
@@ -33,15 +39,15 @@ class ScrapeConfig():
     def __init__(self, url: str):
         """Initialize a default scrape config with the given url."""
         self.url = url
-        self.request_timeout = 10
+        self.request_timeout = DEFAULT_REQUEST_TIMEOUT
         self.proxy_server = None
         self.javascript = False
-        self.javascript_wait = 0
+        self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT
         self.useragent = None
         self.multi_page = False
         self.next_page_elem_xpath = None
         self.max_next_pages = sys.maxsize
-        self.next_page_timeout = 0
+        self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT
 
     @property
     def url(self):
@@ -56,12 +62,13 @@ class ScrapeConfig():
 class ScrapeResult():
     """Class to keep the Download Result Data."""
     
-    def __init__(self, url: str, success: bool):
+    def __init__(self, url: str):
         """Initialize the Scrape Result."""
         self.url = url
-        self.success = success
+        self.success = False
         self.html_pages = []
         self.error_msg = None
+        self.request_time_ms = 0
 
     def add_html_page (self, page):
         self.html_pages.append(page)
@@ -81,9 +88,27 @@ def _scrape_url_requests(config: ScrapeConfig) -> ScrapeResult:
     """Scrape using Requests."""
     _validate_config_for_requests(config)
 
-    resp = requests.request('get', config.url)
-    result = ScrapeResult(config.url, resp.status_code == 200)
-    result.add_html_page(resp.text)
+    result = ScrapeResult(config.url)
+    time = datetime.datetime.now()
+    try:
+        resp = requests.request('get', config.url,
+                                timeout=config.request_timeout)
+    except requests.RequestException as error:
+        result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
+    else:
+        if resp.status_code == 200:
+            result.success = True
+            result.add_html_page(resp.text)
+        else:
+            result.error_msg = (F'HTTP Error: {resp.status_code} - '
+                                F'{http.HTTPStatus(resp.status_code).phrase}')
+    finally:
+        # Doing the Time here might not be as accurate but it saves us
+        # Doing the time measuring multiple times
+        timediff = datetime.datetime.now() - time
+        result.request_time_ms = (timediff.total_seconds() * 1000 +
+                                  timediff.microseconds / 1000)
+
     return result
 
 def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:

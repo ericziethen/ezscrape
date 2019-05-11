@@ -20,7 +20,11 @@ URL_MULTI_PAGE_JS_STATIC_LINKS_01 = urljoin(LOCAL_SERVER_HTTP, 'MultiPageJS_STAT
 
 URL_BAD_URL = 'this is not a url'
 URL_URL_NOT_ONLINE = urljoin(LOCAL_SERVER_HTTP, 'UrlNotFound.html')
+URL_TIMEOUT = 'http://10.255.255.1/'
 
+
+def test_local_test_server_running():
+    assert scraper.check_url(LOCAL_SERVER_HTTP, local_only=True)
 
 ########################################
 # Tests for Fuction is_local_address
@@ -82,14 +86,14 @@ def test_check_url_local_only_exception(url):
 def test_valid_scrape_config():
     url = 'fake_url'
     config = scraper.ScrapeConfig(url)
-    assert config.request_timeout == 10
+    assert config.request_timeout == scraper.DEFAULT_REQUEST_TIMEOUT
     assert config.proxy_server == None
     assert config.javascript == False
-    assert config.javascript_wait == 0
+    assert config.javascript_wait == scraper.DEFAULT_JAVASCRIPT_WAIT
     assert config.useragent == None
     assert config.next_page_elem_xpath == None
     assert config.max_next_pages == sys.maxsize
-    assert config.next_page_timeout == 0
+    assert config.next_page_timeout == scraper.DEFAULT_NEXT_PAGE_TIMEOUT
     assert config.multi_page == False
 
     config.request_timeout = 30
@@ -142,9 +146,6 @@ REQUESTS_GOOD_URLS = [
 ]
 @pytest.mark.parametrize('url', REQUESTS_GOOD_URLS)
 def test_requests_good_scrape(url):
-    # First make sure our local server is reachable
-    assert scraper.check_url(LOCAL_SERVER_HTTP, local_only=True)
-
     config = scraper.ScrapeConfig(url)
     resp = scraper._scrape_url_requests(config)
 
@@ -154,16 +155,26 @@ def test_requests_good_scrape(url):
 
 # Scrape Issues
 REQUESTS_BAD_URLS = [
-    ()
+    (URL_BAD_URL),
+    (URL_URL_NOT_ONLINE)
 ]
 @pytest.mark.parametrize('url', REQUESTS_BAD_URLS)
 def test_requests_bad_scrape(url):
-    # First make sure our local server is reachable
-    #assert scraper.check_url(LOCAL_SERVER_HTTP, local_only=True)
-    pass
+    result = scraper._scrape_url_requests(scraper.ScrapeConfig(url))
+    assert not result.success
+    assert result.error_msg is not None
+    assert not result.html_pages
 
 
+def test_requests_timeout():
+    config = scraper.ScrapeConfig(URL_TIMEOUT)
+    config.request_timeout = 2
 
+    result = scraper._scrape_url_requests(config)
+    assert not result.success
+    assert result.error_msg is not None
+    assert not result.html_pages
+    assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
 
 
 ########################################
