@@ -142,7 +142,12 @@ def test_requests_invalid_config(url, javascript, next_page_elem_xpath, multi_pa
 
 # Good Scrape Tests
 REQUESTS_GOOD_URLS = [
-    (URL_SINGLE_PAGE_NO_JS)
+    (URL_SINGLE_PAGE_JS),
+    (URL_SINGLE_PAGE_JS_DELAYED),
+    (URL_SINGLE_PAGE_NO_JS),
+    (URL_MULTI_PAGE_JS_DYNAMIC_LINKS),
+    (URL_MULTI_PAGE_NO_JS_START_GOOD),
+    (URL_MULTI_PAGE_JS_STATIC_LINKS_01)
 ]
 @pytest.mark.parametrize('url', REQUESTS_GOOD_URLS)
 def test_requests_good_scrape(url):
@@ -153,13 +158,17 @@ def test_requests_good_scrape(url):
     assert resp.error_msg == None
     assert len(resp.html_pages) == 1
 
+    page = resp.html_pages[0]
+    assert NON_JS_TEST_STRING in page
+    assert JS_TEST_STRING not in page
+
 # Scrape Issues
 REQUESTS_BAD_URLS = [
     (URL_BAD_URL),
     (URL_URL_NOT_ONLINE)
 ]
 @pytest.mark.parametrize('url', REQUESTS_BAD_URLS)
-def test_requests_bad_scrape(url):
+def test_requests_bad_url(url):
     result = scraper._scrape_url_requests(scraper.ScrapeConfig(url))
     assert not result.success
     assert result.error_msg is not None
