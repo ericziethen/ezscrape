@@ -44,7 +44,7 @@ class ScrapeConfig():
         self.javascript = False
         self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT
         self.useragent = None
-        self.multi_page = False
+        self.multi_page = False  # TODO - Verify in the end if we even need this field or we can always do it without
         self.next_page_elem_xpath = None
         self.max_next_pages = sys.maxsize
         self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT
