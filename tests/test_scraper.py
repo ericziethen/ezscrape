@@ -185,6 +185,7 @@ def test_requests_timeout():
     assert not result.html_pages
     assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
 
+
 ########################################
 # Tests for scrape_url_requests_html()
 ########################################
@@ -215,7 +216,7 @@ REQUESTS_HTML_GOOD_URLS = [
 def test_requests_html_good_scrape(url, load_javascript, expect_javascript, expected_page_count):
     config = scraper.ScrapeConfig(url)
     config.javascript = load_javascript
-    resp = scraper._scrape_url_requests(config)
+    resp = scraper._scrape_url_requests_html(config)
 
     assert resp.success == True
     assert resp.error_msg == None
