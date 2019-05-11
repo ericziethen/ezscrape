@@ -5,6 +5,7 @@
 import datetime
 import http
 import ipaddress
+import logging
 import os
 import requests
 import requests_html
@@ -13,9 +14,11 @@ import urllib.parse
 
 from typing import Optional
 
+logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
 DEFAULT_REQUEST_TIMEOUT = 5.0
 DEFAULT_NEXT_PAGE_TIMEOUT = 3
-DEFAULT_JAVASCRIPT_WAIT = 5
+DEFAULT_JAVASCRIPT_WAIT = 3.0
 
 SPECIAL_LOCAL_ADDRESSES = [
     'localhost',
@@ -44,9 +47,9 @@ class ScrapeConfig():
         self.javascript = False
         self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT
         self.useragent = None
-        self.multi_page = False  # TODO - Verify in the end if we even need this field or we can always do it without
+        self.attempt_multi_page = False  # TODO - Verify in the end if we even need this field or we can always do it without
         self.next_page_elem_xpath = None
-        self.max_next_pages = sys.maxsize
+        self.max_pages = sys.maxsize
         self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT
 
     @property
@@ -79,7 +82,7 @@ def _validate_config_for_requests(config: ScrapeConfig):
     if config.javascript:
         raise ScrapeConfigError("No Support for Javascript")
 
-    if (config.multi_page or
+    if (config.attempt_multi_page or
             (config.next_page_elem_xpath is not None)):
         raise ScrapeConfigError("No Support for Multipages, check fields")
 
@@ -111,9 +114,68 @@ def _scrape_url_requests(config: ScrapeConfig) -> ScrapeResult:
 
     return result
 
+
+def _validate_config_for_requests_html(config: ScrapeConfig):
+    """Check if Requests can handle this config."""
+    if config.next_page_elem_xpath is not None:
+        raise ScrapeConfigError("No Suport for Next pages via Xpath")
+
+
 def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
     """Scrape using Requests-HTML."""
-    raise NotImplementedError
+    _validate_config_for_requests_html(config)
+
+    result = ScrapeResult(config.url)
+    session = requests_html.HTMLSession()
+
+    next_url = config.url
+    count = 0
+    while next_url is not None:
+        logger.debug(F'Processing Url: "{next_url}"')
+        count += 1
+
+        # Fire the Request
+        time = datetime.datetime.now()
+        try:
+            resp = session.get(next_url, timeout=config.request_timeout)
+        except requests.RequestException as error:
+            result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
+        else:
+            if config.javascript:
+                resp.html.render(sleep=config.javascript_wait)
+            if resp.status_code == 200:
+                result.success = True
+                result.add_html_page(resp.html.html)
+            else:
+                result.error_msg = (F'HTTP Error: {resp.status_code} - '
+                                    F'{http.HTTPStatus(resp.status_code).phrase}')
+        finally:
+            # Doing the Time here might not be as accurate but it saves us
+            # Doing the time measuring multiple times
+            timediff = datetime.datetime.now() - time
+            result.request_time_ms = (timediff.total_seconds() * 1000 +
+                                      timediff.microseconds / 1000)
+
+        if count > config.max_pages:
+            logger.debug(F'Paging limit of {config.max_pages} reached, '
+                         'stop scraping')
+            break
+
+        if not config.attempt_multi_page:
+            logger.debug((F'Multipage is not set, skip after first page'))
+            break
+
+        next_url = resp.html.next()
+
+    return result
+
+
+
+
+
+
+
+
 
 
 def _scrape_url_selenium_chrome(config: ScrapeConfig,
@@ -236,7 +298,7 @@ class ScrapeConfig():
         self.next_page_xpath = ''
         self.useragent = ''
         self.multipages = False
-        self.max_next_pages = sys.maxsize
+        self.max_pages = sys.maxsize
         self.next_page_timeout = 1
         # TODO - Define more fields whatever might be needed for scraping
 

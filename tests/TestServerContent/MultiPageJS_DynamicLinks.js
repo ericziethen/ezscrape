@@ -8,6 +8,7 @@
 	results = [];
 
 	function init(){
+        document.getElementById("content").innerHTML = "LOADED-Javascript Line";
 		for( var x = 0; x < config.max_results; x++ ){
 			results[x] = "Result " + x;
 		}
