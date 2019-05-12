@@ -155,6 +155,7 @@ def test_requests_good_scrape(url):
     result = scraper._scrape_url_requests(config)
 
     assert result.url == url
+    assert result.request_time_ms is not None
     assert result.success == True
     assert result.error_msg == None
     assert len(result.html_pages) == 1
@@ -224,8 +225,9 @@ def test_requests_html_good_scrape(url, load_javascript, expect_javascript, expe
     result = scraper._scrape_url_requests_html(config)
 
     assert result.url == url
-    assert result.success == True
-    assert result.error_msg == None
+    assert result.request_time_ms is not None
+    assert result.success
+    assert result.error_msg is None
     assert len(result.html_pages) == expected_page_count
 
     # Search String Found
@@ -283,6 +285,87 @@ def test_requests_html_limit_pages():
 ########################################
 # Tests for scrape_url_selenium_chrome()
 ########################################
+# Good Scrape Tests
+SELENIUM_CHROME_GOOD_URLS = [
+    (URL_SINGLE_PAGE_JS, True, None, 1, 1),
+    (URL_SINGLE_PAGE_JS_DELAYED, True, None, 1, 1),
+    (URL_SINGLE_PAGE_NO_JS, False, None, 1, 1),
+    (URL_MULTI_PAGE_JS_STATIC_LINKS_01, True, None, 4, 1),
+    (URL_MULTI_PAGE_JS_STATIC_LINKS_01, True, R'''//a[@title='next']''', 4, 4),
+    (URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True, None, 10, 1),
+    (URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True, R'''//a[@id='next']''', 10, 10),
+    (URL_MULTI_PAGE_NO_JS_START_GOOD, False, None, 3, 1),
+    (URL_MULTI_PAGE_NO_JS_START_GOOD, False, R'''//li[@ class='page-item']/a[@class='page-link' and text()='Next']''', 3, 3)
+]
+@pytest.mark.eric
+@pytest.mark.parametrize('url, javascript, next_button_xpath, page_count, expected_page_count', SELENIUM_CHROME_GOOD_URLS)
+def test_selenium_chrome_good_scrape(url, javascript, next_button_xpath, page_count, expected_page_count):
+    config = scraper.ScrapeConfig(url)
+    config.javascript = javascript
+    config.next_page_elem_xpath = next_button_xpath
+    result = scraper._scrape_url_selenium_chrome(config)
+
+    assert result.url == url
+    assert result.success
+    assert result.request_time_ms is not None
+    assert result.error_msg is None
+    assert len(result.html_pages) == expected_page_count
+
+    # Search String Found
+    for idx, page in enumerate(result.html_pages):
+        print(F'CHECK PAGE: {idx}, page: "{page}"')
+        assert NON_JS_TEST_STRING in page
+
+        if javascript:
+            assert JS_TEST_STRING in page
+        else:
+            assert JS_TEST_STRING not in page
+
+        if page_count > 1:
+            assert F'THIS IS PAGE {idx+1}/{page_count}' in page
+
+@pytest.mark.eric
+@pytest.mark.slow
+def test_selenium_chrome_context_manager_good_scrape():
+    with scraper.SeleniumChromeSession() as chrome_session:
+        for tup in SELENIUM_CHROME_GOOD_URLS:
+            url = tup[0]
+            javascript = tup[1]
+            next_button_xpath = tup[2]
+            page_count = tup[3]
+            expected_page_count = tup[4]
+
+            config = scraper.ScrapeConfig(url)
+            result = scraper._scrape_url_selenium_chrome(config, browser=chrome_session)
+
+            assert result.url == url
+            assert result.success
+            assert result.error_msg is None
+            assert len(result.html_pages) == expected_page_count
+
+            # Search String Found
+            for idx, page in enumerate(result.html_pages):
+                print(F'CHECK PAGE: {idx}, page: "{page}"')
+                assert NON_JS_TEST_STRING in page
+
+                if javascript:
+                    assert JS_TEST_STRING in page
+                else:
+                    assert JS_TEST_STRING not in page
+
+                if page_count > 1:
+                    assert F'THIS IS PAGE {idx+1}/{page_count}' in page
+
+
+
+
+
+
+
+
+
+
+
 
 
 ########################################

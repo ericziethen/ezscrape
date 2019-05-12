@@ -2,3 +2,4 @@
 # Network Related
 requests
 requests-html
+selenium

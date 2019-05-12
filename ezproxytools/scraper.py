@@ -9,12 +9,16 @@ import logging
 import os
 import requests
 import requests_html
+import selenium
 import sys
 import urllib.parse
 
+from selenium import webdriver
 from typing import Optional
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
+CHROME_WEBDRIVER_ENV_VAR = 'CHROME_WEBDRIVER_PATH'
 
 DEFAULT_REQUEST_TIMEOUT = 5.0
 DEFAULT_NEXT_PAGE_TIMEOUT = 3
@@ -31,6 +35,9 @@ class ScrapeError(Exception):
 
 class ScrapeConfigError(ScrapeError):
     """Error with the Scrape Config."""
+
+class SeleniumSetupError(Exception):
+    """Exception is Selenium is not Setup Correctly."""
 
 class SeleniumChromeSession():
     """Context Manager for a Selenium Chrome Session."""
@@ -71,7 +78,7 @@ class ScrapeResult():
         self.success = False
         self.html_pages = []
         self.error_msg = None
-        self.request_time_ms = 0
+        self.request_time_ms = None
 
     def add_html_page (self, page):
         self.html_pages.append(page)
@@ -170,18 +177,40 @@ def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
     return result
 
 
-
-
-
-
-
-
-
-
 def _scrape_url_selenium_chrome(config: ScrapeConfig,
                                 browser=None) -> ScrapeResult:
     """Scrape using Selenium with Chrome."""
-    raise NotImplementedError
+    # TODO - Support Chrome Portable Overwrite
+        # String chromePath = "M:/my/googlechromeporatble.exe path"; 
+        #   options.setBinary(chromepath);
+        #   System.setProperty("webdriver.chrome.driver",chromedriverpath);
+    #chrome_exec_var=
+
+    chrome_web_driver_path = os.environ.get(CHROME_WEBDRIVER_ENV_VAR)
+    if chrome_web_driver_path is None:
+        raise SeleniumSetupError((F'Webdriver not found, set path as env '
+                                  F'Variable: "{CHROME_WEBDRIVER_ENV_VAR}"'))
+
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument('--headless')
+
+    result = ScrapeResult(config.url)
+
+    with webdriver.Chrome(
+            chrome_options=chrome_options,
+            executable_path=chrome_web_driver_path) as browser:
+        
+        time = datetime.datetime.now()
+        resp = browser.get(config.url)
+        timediff = datetime.datetime.now() - time
+        result.request_time_ms = (timediff.total_seconds() * 1000 +
+                                    timediff.microseconds / 1000)
+
+        result.success = True
+        result.add_html_page(browser.page_source)
+
+    return result
+
 
 def scrape_url(config: ScrapeConfig) -> ScrapeResult:
     """Generic function to handle all scraping requests."""
