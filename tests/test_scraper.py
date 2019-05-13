@@ -158,9 +158,9 @@ def test_requests_good_scrape(url):
     assert result.request_time_ms is not None
     assert result.success == True
     assert result.error_msg == None
-    assert len(result.html_pages) == 1
+    assert len(result) == 1
 
-    page = result.html_pages[0]
+    page = result._scrape_pages[0].html
     assert NON_JS_TEST_STRING in page
     assert JS_TEST_STRING not in page
 
@@ -176,7 +176,7 @@ def test_requests_bad_url(url):
     assert result.url == url
     assert not result.success
     assert result.error_msg is not None
-    assert not result.html_pages
+    assert not result
 
 
 def test_requests_timeout():
@@ -186,7 +186,7 @@ def test_requests_timeout():
     result = scraper._scrape_url_requests(config)
     assert not result.success
     assert result.error_msg is not None
-    assert not result.html_pages
+    assert not result
     assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
 
 
@@ -228,10 +228,11 @@ def test_requests_html_good_scrape(url, load_javascript, expect_javascript, expe
     assert result.request_time_ms is not None
     assert result.success
     assert result.error_msg is None
-    assert len(result.html_pages) == expected_page_count
+    assert len(result) == expected_page_count
 
     # Search String Found
-    for idx, page in enumerate(result.html_pages):
+    for idx, scrape_result in enumerate(result):
+        page = scrape_result.html
         print(F'CHECK PAGE: {idx}, page: "{page}"')
         assert NON_JS_TEST_STRING in page
 
@@ -261,7 +262,7 @@ def test_requests_html_bad_url(url, req_timeout, js_timeout):
     assert result.url == url
     assert not result.success
     assert result.error_msg is not None
-    assert not result.html_pages
+    assert not result
 
 def test_requests_html_timeout():
     config = scraper.ScrapeConfig(URL_TIMEOUT)
@@ -270,7 +271,7 @@ def test_requests_html_timeout():
     result = scraper._scrape_url_requests_html(config)
     assert not result.success
     assert result.error_msg is not None
-    assert not result.html_pages
+    assert not result
     assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
 
 def test_requests_html_limit_pages():
@@ -279,7 +280,7 @@ def test_requests_html_limit_pages():
     config.max_pages = 1
     result = scraper._scrape_url_requests_html(config)
 
-    assert len(result.html_pages) == config.max_pages + 1
+    assert len(result) == config.max_pages + 1
 
 
 ########################################
@@ -309,10 +310,11 @@ def test_selenium_chrome_good_scrape(url, javascript, next_button_xpath, page_co
     assert result.success
     assert result.request_time_ms is not None
     assert result.error_msg is None
-    assert len(result.html_pages) == expected_page_count
+    assert len(result) == expected_page_count
 
     # Search String Found
-    for idx, page in enumerate(result.html_pages):
+    for idx, scrape_result in enumerate(result):
+        page = scrape_result.html
         print(F'CHECK PAGE: {idx}, page: "{page}"')
         assert NON_JS_TEST_STRING in page
 
@@ -341,10 +343,11 @@ def test_selenium_chrome_context_manager_good_scrape():
             assert result.url == url
             assert result.success
             assert result.error_msg is None
-            assert len(result.html_pages) == expected_page_count
+            assert len(result) == expected_page_count
 
             # Search String Found
-            for idx, page in enumerate(result.html_pages):
+            for idx, scrape_result in enumerate(result):
+                page = scrape_result.html
                 print(F'CHECK PAGE: {idx}, page: "{page}"')
                 assert NON_JS_TEST_STRING in page
 
@@ -499,10 +502,10 @@ def test_good_page_requests(url, load_javascript, expect_javascript, page_count)
     assert result.result_good
 
     # The expected number of pages found
-    assert len(result.html_pages) == page_count
+    assert len(result) == page_count
 
     # Search String Found
-    for idx, page in enumerate(result.html_pages):
+    for idx, page in enumerate(result):
         print(F'CHECK PAGE: {idx}, page: "{page}"')
         assert NON_JS_TEST_STRING in page
 
@@ -533,10 +536,10 @@ def test_delayed_good_page_requests(url, load_javascript, expect_javascript, pag
     assert result.result_good
 
     # The expected number of pages found
-    assert len(result.html_pages) == page_count
+    assert len(result) == page_count
 
     # Search String Found
-    for idx, page in enumerate(result.html_pages):
+    for idx, page in enumerate(result):
         print(F'CHECK PAGE: {idx}, page: "{page}"')
         assert NON_JS_TEST_STRING in page
 

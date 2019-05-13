@@ -14,7 +14,7 @@ import sys
 import urllib.parse
 
 from selenium import webdriver
-from typing import Optional
+from typing import Iterator, Optional
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -69,19 +69,58 @@ class ScrapeConfig():
             raise ScrapeConfigError('Url cannot be blank')
         self._url = new_url
 
+
+class ScrapePage():
+    """Class to represent a single scraped page."""
+
+    def __init__(self, html: str):
+        """Initialize the scrape page data."""
+        self.html = html
+        self.request_time_ms: Optional[float] = None
+
 class ScrapeResult():
     """Class to keep the Download Result Data."""
     
     def __init__(self, url: str):
         """Initialize the Scrape Result."""
+        self._scrape_pages = []
+        self._idx = 0
+
         self.url = url
         self.success = False
-        self.html_pages = []
         self.error_msg = None
-        self.request_time_ms = None
 
-    def add_html_page (self, page):
-        self.html_pages.append(page)
+    @property
+    def request_time_ms(self):
+        req_time = 0
+        for page in self:
+            req_time += page.request_time_ms
+        return req_time
+
+    def add_scrape_page(self, html: str, *,
+                        scrape_time: Optional[float] = None):
+        """Add a scraped page."""
+        page = ScrapePage(html)
+        page.request_time_ms = scrape_time
+        self._scrape_pages.append(page)
+
+    def __iter__(self) -> Iterator[ScrapePage]:
+        self._idx = 0
+        return self
+
+    def __next__(self) -> ScrapePage:
+        try:
+            item = self._scrape_pages[self._idx]
+        except IndexError:
+            raise StopIteration()
+        self._idx += 1
+        return item
+
+    def __len__(self) -> int:
+        return len(self._scrape_pages)
+
+    def __bool__(self) -> bool:
+        return self._scrape_pages is None
 
 
 def _validate_config_for_requests(config: ScrapeConfig):
@@ -108,16 +147,13 @@ def _scrape_url_requests(config: ScrapeConfig) -> ScrapeResult:
     else:
         if resp.status_code == 200:
             result.success = True
-            result.add_html_page(resp.text)
+            timediff = datetime.datetime.now() - time
+            scrape_time = (timediff.total_seconds() * 1000 +
+                           timediff.microseconds / 1000)
+            result.add_scrape_page(resp.text, scrape_time=scrape_time)
         else:
             result.error_msg = (F'HTTP Error: {resp.status_code} - '
                                 F'{http.HTTPStatus(resp.status_code).phrase}')
-    finally:
-        # Doing the Time here might not be as accurate but it saves us
-        # Doing the time measuring multiple times
-        timediff = datetime.datetime.now() - time
-        result.request_time_ms = (timediff.total_seconds() * 1000 +
-                                  timediff.microseconds / 1000)
 
     return result
 
@@ -141,6 +177,7 @@ def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
         logger.debug(F'Processing Url: "{next_url}"')
         count += 1
 
+        # TODO - What if we have multiple pages?, do we need the request time for each?
         # Fire the Request
         time = datetime.datetime.now()
         try:
@@ -151,17 +188,16 @@ def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
             if config.javascript:
                 resp.html.render(sleep=config.javascript_wait)
             if resp.status_code == 200:
+                # TODO - What if we have multiple pages?, should we set the status separetely?
+                # TODO We probably want to have the request time for each request and calculate the time as everage for each as a property
                 result.success = True
-                result.add_html_page(resp.html.html)
+                timediff = datetime.datetime.now() - time
+                scrape_time = (timediff.total_seconds() * 1000 +
+                               timediff.microseconds / 1000)
+                result.add_scrape_page(resp.html.html, scrape_time=scrape_time)
             else:
                 result.error_msg = (F'HTTP Error: {resp.status_code} - '
                                     F'{http.HTTPStatus(resp.status_code).phrase}')
-        finally:
-            # Doing the Time here might not be as accurate but it saves us
-            # Doing the time measuring multiple times
-            timediff = datetime.datetime.now() - time
-            result.request_time_ms = (timediff.total_seconds() * 1000 +
-                                      timediff.microseconds / 1000)
 
         if count > config.max_pages:
             logger.debug(F'Paging limit of {config.max_pages} reached, '
@@ -178,7 +214,7 @@ def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
 
 
 def _scrape_url_selenium_chrome(config: ScrapeConfig,
-                                browser=None) -> ScrapeResult:
+                                open_browser=None) -> ScrapeResult:
     """Scrape using Selenium with Chrome."""
     # TODO - Support Chrome Portable Overwrite
         # String chromePath = "M:/my/googlechromeporatble.exe path"; 
@@ -203,11 +239,45 @@ def _scrape_url_selenium_chrome(config: ScrapeConfig,
         time = datetime.datetime.now()
         resp = browser.get(config.url)
         timediff = datetime.datetime.now() - time
-        result.request_time_ms = (timediff.total_seconds() * 1000 +
-                                    timediff.microseconds / 1000)
+        scrape_time = (timediff.total_seconds() * 1000 +
+                       timediff.microseconds / 1000)
 
         result.success = True
-        result.add_html_page(browser.page_source)
+        result.add_scrape_page(browser.page_source, scrape_time=scrape_time)
+
+        '''
+        # TODO - This needs Improvement to Not Do request multiple times
+        if config.next_page_elem_xpath
+        config.next_page_elem_xpath
+        config.max_pages
+
+
+        TODO !!! FIX ME 
+
+
+        element = WebDriverWait(browser, 20).until(
+        EC.element_to_be_clickable((By.XPATH, "//li[@id='proxylisttable_next' and @class='fg-button ui-button ui-state-default next']/a")))
+        print('  - Wait Finished')
+        print('  - Element Enabled:', element.is_enabled())
+        completeName = os.path.join('.', F'REQUESTS-SELENIUM_{x}.html')
+        file_object = codecs.open(completeName, "w", "utf-8")
+        html = browser.page_source
+        file_object.write(html)
+        print('  - HTML Written to', completeName)
+
+        time.sleep(5)
+        element.click();
+        '''
+
+
+
+
+
+
+
+
+
+
 
     return result
 
