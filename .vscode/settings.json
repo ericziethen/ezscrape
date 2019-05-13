@@ -1,7 +1,7 @@
 {
     "python.pythonPath": ".venv\\Scripts\\python.exe",
     "python.autoComplete.extraPaths": [
-        "${workspaceFolder}\\ezproxytools"
+        "${workspaceFolder}\\ezscrape"
     ],
 
     "editor.tabSize": 4,
