@@ -2,6 +2,20 @@
 
 """Provide Website downloading functionality."""
 
+'''
+!!! MOVE FUNCTIONALITY INTO SUB package
+    /ezscrape/
+              scraper/
+                      scraper_definitions.py    -> Classes, Exceptions etc
+                      scraper_requests.py       -> Requests
+                      scraper_requests_html.py  -> Requests-HTML
+                      scraper_selenium.py       -> Selenium
+                      scraper.py                -> Combine all available scrapers
+    1.) Make sure all non slow and non web tests ok
+    2.) Copy Definitions
+    3.) Copy Requests
+'''
+
 import contextlib
 import datetime
 import http
@@ -78,6 +92,8 @@ class ScrapePage():
         """Initialize the scrape page data."""
         self.html = html
         self.request_time_ms: Optional[float] = None
+        self.success = False
+
 
 class ScrapeResult():
     """Class to keep the Download Result Data."""
@@ -89,7 +105,6 @@ class ScrapeResult():
 
         self.url = url
         # TODO - Move Success to ScrapePage
-        self.success = False # TODO - Maybe success should be for each sub page
         self.error_msg = None
 
     @property
@@ -100,10 +115,12 @@ class ScrapeResult():
         return req_time
 
     def add_scrape_page(self, html: str, *,
-                        scrape_time: Optional[float] = None):
+                        scrape_time: Optional[float] = None,
+                        success: bool = False):
         """Add a scraped page."""
         page = ScrapePage(html)
         page.request_time_ms = scrape_time
+        page.success = success
         self._scrape_pages.append(page)
 
     def __iter__(self) -> Iterator[ScrapePage]:
@@ -122,7 +139,7 @@ class ScrapeResult():
         return len(self._scrape_pages)
 
     def __bool__(self) -> bool:
-        return self._scrape_pages is None
+        return bool(self._scrape_pages)
 
 
 def _validate_config_for_requests(config: ScrapeConfig):
@@ -148,11 +165,11 @@ def _scrape_url_requests(config: ScrapeConfig) -> ScrapeResult:
         result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
     else:
         if resp.status_code == 200:
-            result.success = True
             timediff = datetime.datetime.now() - time
             scrape_time = (timediff.total_seconds() * 1000 +
                            timediff.microseconds / 1000)
-            result.add_scrape_page(resp.text, scrape_time=scrape_time)
+            result.add_scrape_page(resp.text, scrape_time=scrape_time,
+                                   success=True)
         else:
             result.error_msg = (F'HTTP Error: {resp.status_code} - '
                                 F'{http.HTTPStatus(resp.status_code).phrase}')
@@ -190,13 +207,11 @@ def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
             if config.javascript:
                 resp.html.render(sleep=config.javascript_wait)
             if resp.status_code == 200:
-                # TODO - What if we have multiple pages?, should we set the status separetely?
-                # TODO We probably want to have the request time for each request and calculate the time as everage for each as a property
-                result.success = True
                 timediff = datetime.datetime.now() - time
                 scrape_time = (timediff.total_seconds() * 1000 +
                                timediff.microseconds / 1000)
-                result.add_scrape_page(resp.html.html, scrape_time=scrape_time)
+                result.add_scrape_page(resp.html.html, scrape_time=scrape_time,
+                                       success=True)
             else:
                 result.error_msg = (F'HTTP Error: {resp.status_code} - '
                                     F'{http.HTTPStatus(resp.status_code).phrase}')
@@ -267,12 +282,12 @@ def _scrape_url_selenium_chrome_for_browser(
                                         scrape_time=scrape_time)
                 break
             else:
-                result.success = True
                 timediff = datetime.datetime.now() - time
                 scrape_time = (timediff.total_seconds() * 1000 +
                                 timediff.microseconds / 1000)
                 result.add_scrape_page(browser.page_source,
-                                        scrape_time=scrape_time)
+                                       scrape_time=scrape_time,
+                                       success=True)
 
                 if count > config.max_pages:
                     logger.debug(F'Paging limit of {config.max_pages} reached, stop scraping')
@@ -290,9 +305,9 @@ def _scrape_url_selenium_chrome_for_browser(
         timediff = datetime.datetime.now() - time
         scrape_time = (timediff.total_seconds() * 1000 +
                         timediff.microseconds / 1000)
-        result.success = True
         result.add_scrape_page(browser.page_source,
-                                scrape_time=scrape_time)
+                               scrape_time=scrape_time,
+                               success=True)
 
     return result
 
@@ -342,7 +357,15 @@ def check_url(url: str, *, local_only: bool) -> bool:
 
     config = ScrapeConfig(url)
     result = _scrape_url_requests(config)
-    return result.success
+
+    # TODO - There mist be a better way if the request succeeded than 
+    # TODO - accessing the underlying data directly
+    # TODO - Maybe need a derived value
+    # TODO - Maybe can use an Enum Value to represent different success states
+    if result and (result._scrape_pages[0].success):
+        return True
+    else:
+        return False
 
 
 

@@ -159,9 +159,9 @@ def test_requests_good_scrape(url):
 
     assert result.url == url
     assert result.request_time_ms is not None
-    assert result.success == True
     assert result.error_msg == None
     assert len(result) == 1
+    assert result._scrape_pages[0].success
 
     page = result._scrape_pages[0].html
     assert NON_JS_TEST_STRING in page
@@ -176,8 +176,8 @@ REQUESTS_BAD_URLS = [
 def test_requests_bad_url(url):
     result = scraper._scrape_url_requests(scraper.ScrapeConfig(url))
 
+    assert not result
     assert result.url == url
-    assert not result.success
     assert result.error_msg is not None
     assert not result
 
@@ -187,7 +187,7 @@ def test_requests_timeout():
     config.request_timeout = 2
 
     result = scraper._scrape_url_requests(config)
-    assert not result.success
+    assert not result
     assert result.error_msg is not None
     assert not result
     assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
@@ -229,12 +229,12 @@ def test_requests_html_good_scrape(url, load_javascript, expect_javascript, expe
 
     assert result.url == url
     assert result.request_time_ms is not None
-    assert result.success
     assert result.error_msg is None
     assert len(result) == expected_page_count
 
     # Search String Found
     for idx, scrape_result in enumerate(result):
+        assert scrape_result.success
         page = scrape_result.html
         print(F'CHECK PAGE: {idx}, page: "{page}"')
         assert NON_JS_TEST_STRING in page
@@ -263,7 +263,6 @@ def test_requests_html_bad_url(url, req_timeout, js_timeout):
     result = scraper._scrape_url_requests_html(config)
 
     assert result.url == url
-    assert not result.success
     assert result.error_msg is not None
     assert not result
 
@@ -272,7 +271,6 @@ def test_requests_html_timeout():
     config.request_timeout = 2
 
     result = scraper._scrape_url_requests_html(config)
-    assert not result.success
     assert result.error_msg is not None
     assert not result
     assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
@@ -319,15 +317,15 @@ def test_selenium_chrome_good_scrape(url, javascript, next_button_xpath, page_co
     print('LEN:::', len(result))
     print('MSG:::', result.error_msg)
 
+    assert result
     assert result.url == url
-    # TODO Handle Success in subpages
-    #assert result.success  # Multi Pages might not finish as success
     assert result.request_time_ms is not None
     assert result.error_msg is None
     assert len(result) == expected_page_count
 
     # Search String Found
     for idx, scrape_result in enumerate(result, start=start_page_num):
+        assert scrape_result.success
         page = scrape_result.html
         print(F'CHECK PAGE: {idx}, page: "{page}"')
         assert NON_JS_TEST_STRING in page
@@ -361,14 +359,14 @@ def test_selenium_chrome_context_manager_good_scrape():
 
             result = scraper._scrape_url_selenium_chrome(config, browser=chrome_session)
 
+            assert result
             assert result.url == url
-            # TODO Handle Success in subpages
-            #assert result.success
             assert result.error_msg is None
             assert len(result) == expected_page_count
 
             # Search String Found
         for idx, scrape_result in enumerate(result, start=start_page_num):
+            scrape_result.success
             page = scrape_result.html
             print('HTML', page)
             print(F'CHECK PAGE: {idx}, page: "{page}"')
@@ -390,7 +388,7 @@ def test_selenium_chrome_context_manager_good_scrape():
 
 
 
-
+'''
 ### TODO - 
 ### TODO - 
 ### TODO - Simplify the Tests and group into similar Functionality
@@ -407,7 +405,7 @@ def check_me(num):
 @pytest.mark.parametrize('num', range(10))
 def test_eric(num):
     check_me(num)
-
+'''
 
 
 
