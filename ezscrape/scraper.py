@@ -2,6 +2,7 @@
 
 """Provide Website downloading functionality."""
 
+import contextlib
 import datetime
 import http
 import ipaddress
@@ -42,10 +43,6 @@ class ScrapeConfigError(ScrapeError):
 
 class SeleniumSetupError(Exception):
     """Exception is Selenium is not Setup Correctly."""
-
-class SeleniumChromeSession():
-    """Context Manager for a Selenium Chrome Session."""
-
 
 class ScrapeConfig():
     """Class to hold scrape config data needed for downloading the html."""
@@ -218,34 +215,9 @@ def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
     return result
 
 
-
-
-
-
-'''
-public boolean retryingFindClick(By by) {
-    boolean result = false;
-    int attempts = 0;
-    while(attempts < 2) {
-        try {
-            driver.findElement(by).click();
-            result = true;
-            break;
-        } catch(StaleElementException e) {
-        }
-        attempts++;
-    }
-    return result;
-}
-'''
-
-
-def _scrape_url_selenium_chrome(config: ScrapeConfig,
-                                open_browser=None) -> ScrapeResult:
-    """Scrape using Selenium with Chrome."""
-    # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
-
-
+@contextlib.contextmanager
+def SeleniumChromeSession():
+    """Context Manager wrapper for a Selenium Chrome Session."""
     # TODO - Support Chrome Portable Overwrite
         # String chromePath = "M:/my/googlechromeporatble.exe path"; 
         #   options.setBinary(chromepath);
@@ -260,62 +232,80 @@ def _scrape_url_selenium_chrome(config: ScrapeConfig,
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--headless')
 
-    result = ScrapeResult(config.url)
-
     with webdriver.Chrome(
             chrome_options=chrome_options,
             executable_path=chrome_web_driver_path) as browser:
+        yield (browser)
 
-        xpath_bttn = config.next_page_button_xpath
-        if xpath_bttn:
-            count = 0
-            r = browser.get(config.url)
-            while True:
-                # SOME PAGE LOAD INFO AND TIPS if there are issues
-                # http://www.obeythetestinggoat.com/how-to-get-selenium-to-wait-for-page-load-after-a-click.html
 
-                try:
-                    time = datetime.datetime.now()
-                    element = WebDriverWait(
-                        browser, config.request_timeout).until(
-                            EC.element_to_be_clickable((By.XPATH, xpath_bttn)))
-                except TimeoutException as error:
-                    # TODO - Maybe this should be an error and success state for each sub page
-                    #result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
-                    timediff = datetime.datetime.now() - time
-                    scrape_time = (timediff.total_seconds() * 1000 +
-                                   timediff.microseconds / 1000)
-                    result.add_scrape_page(browser.page_source,
-                                           scrape_time=scrape_time)
+def _scrape_url_selenium_chrome_for_browser(
+        config: ScrapeConfig, browser) -> ScrapeResult:
+    """Scrape using Selenium with Chrome."""
+    # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
+    
+    result = ScrapeResult(config.url)
+    xpath_bttn = config.next_page_button_xpath
+    if xpath_bttn:
+        count = 0
+        r = browser.get(config.url)
+        while True:
+            # SOME PAGE LOAD INFO AND TIPS if there are issues
+            # http://www.obeythetestinggoat.com/how-to-get-selenium-to-wait-for-page-load-after-a-click.html
+
+            try:
+                time = datetime.datetime.now()
+                element = WebDriverWait(
+                    browser, config.request_timeout).until(
+                        EC.element_to_be_clickable((By.XPATH, xpath_bttn)))
+            except TimeoutException as error:
+                # TODO - Maybe this should be an error and success state for each sub page
+                #result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
+                timediff = datetime.datetime.now() - time
+                scrape_time = (timediff.total_seconds() * 1000 +
+                                timediff.microseconds / 1000)
+                result.add_scrape_page(browser.page_source,
+                                        scrape_time=scrape_time)
+                break
+            else:
+                result.success = True
+                timediff = datetime.datetime.now() - time
+                scrape_time = (timediff.total_seconds() * 1000 +
+                                timediff.microseconds / 1000)
+                result.add_scrape_page(browser.page_source,
+                                        scrape_time=scrape_time)
+
+                if count > config.max_pages:
+                    logger.debug(F'Paging limit of {config.max_pages} reached, stop scraping')
                     break
-                else:
-                    result.success = True
-                    timediff = datetime.datetime.now() - time
-                    scrape_time = (timediff.total_seconds() * 1000 +
-                                   timediff.microseconds / 1000)
-                    result.add_scrape_page(browser.page_source,
-                                           scrape_time=scrape_time)
 
-                    if count > config.max_pages:
-                        logger.debug(F'Paging limit of {config.max_pages} reached, stop scraping')
-                        break
+                # Click the next Button
+                element.click()
+                count += 1
+    else:
+        time = datetime.datetime.now()
+        # TODO - If Javascript Page need to Wait, or Wait by default a bit longer
+        # TODO - SELENIUM might not need to know if it's javascript and just use a default wait time
+        # TODO - We might need an implicit wait here
+        r = browser.get(config.url)
+        timediff = datetime.datetime.now() - time
+        scrape_time = (timediff.total_seconds() * 1000 +
+                        timediff.microseconds / 1000)
+        result.success = True
+        result.add_scrape_page(browser.page_source,
+                                scrape_time=scrape_time)
 
-                    # Click the next Button
-                    element.click()
-                    count += 1
-        else:
-            time = datetime.datetime.now()
-            # TODO - If Javascript Page need to Wait, or Wait by default a bit longer
-            # TODO - SELENIUM might not need to know if it's javascript and just use a default wait time
-            # TODO - We might need an implicit wait here
-            r = browser.get(config.url)
-            timediff = datetime.datetime.now() - time
-            scrape_time = (timediff.total_seconds() * 1000 +
-                           timediff.microseconds / 1000)
-            result.success = True
-            result.add_scrape_page(browser.page_source,
-                                   scrape_time=scrape_time)
+    return result
 
+
+def _scrape_url_selenium_chrome(
+        config: ScrapeConfig, *, browser=None) -> ScrapeResult:
+    """Handle existing browser session or create a new one."""
+    if browser is not None:
+        result = _scrape_url_selenium_chrome_for_browser(config, browser)
+    else:
+        with SeleniumChromeSession() as new_browser:
+            result = _scrape_url_selenium_chrome_for_browser(
+                config, new_browser)
     return result
 
 
