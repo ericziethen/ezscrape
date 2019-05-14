@@ -291,13 +291,13 @@ def test_requests_html_limit_pages():
 ########################################
 # Good Scrape Tests
 SELENIUM_CHROME_GOOD_URLS = [
-    #(URL_SINGLE_PAGE_JS, True, None, 1, 1, None),
-    #(URL_SINGLE_PAGE_JS_DELAYED, True, None, 1, 1, None),
-    #(URL_SINGLE_PAGE_NO_JS, False, None, 1, 1, None),
+    #(URL_SINGLE_PAGE_JS, True, None, 1, 1, 0),
+    #(URL_SINGLE_PAGE_JS_DELAYED, True, None, 1, 1, 0),
+    #(URL_SINGLE_PAGE_NO_JS, False, None, 1, 1, 0),
     #(URL_MULTI_PAGE_JS_STATIC_LINKS_01, True, None, 4, 1, 1),
-    #(URL_MULTI_PAGE_JS_STATIC_LINKS_01, True, R'''//a[@title='next']''', 4, scraper.DEFAULT_MAX_PAGES, 1), # Xpath doesn't indicate button clickable or not
+    (URL_MULTI_PAGE_JS_STATIC_LINKS_01, True, R'''//a[@title='next']''', 4, scraper.DEFAULT_MAX_PAGES, 1), # Xpath doesn't indicate button clickable or not
     #(URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01, True, R'''//a[@title='next' and @class='enabled']''', 2, 2, 1),
-    (URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_02, True, R'''//a[@title='next' and @class='enabled']''', 2, 1, 2),
+    #(URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_02, True, R'''//a[@title='next' and @class='enabled']''', 2, 1, 2),
     #(URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True, None, 10, 1, 1),
     #(URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True, R'''//a[@id='next']''', 10, 10, 1),
     #(URL_MULTI_PAGE_NO_JS_START_GOOD, False, None, 3, 1, 1),
@@ -320,6 +320,7 @@ def test_selenium_chrome_good_scrape(url, javascript, next_button_xpath, page_co
     print('MSG:::', result.error_msg)
 
     assert result.url == url
+    # TODO Handle Success in subpages
     #assert result.success  # Multi Pages might not finish as success
     assert result.request_time_ms is not None
     assert result.error_msg is None
@@ -339,7 +340,6 @@ def test_selenium_chrome_good_scrape(url, javascript, next_button_xpath, page_co
         if page_count > 1:
             assert F'THIS IS PAGE {idx}/{page_count}' in page
 
-@pytest.mark.eric
 @pytest.mark.slow
 def test_selenium_chrome_context_manager_good_scrape():
     with scraper.SeleniumChromeSession() as chrome_session:
@@ -362,6 +362,7 @@ def test_selenium_chrome_context_manager_good_scrape():
             result = scraper._scrape_url_selenium_chrome(config, browser=chrome_session)
 
             assert result.url == url
+            # TODO Handle Success in subpages
             #assert result.success
             assert result.error_msg is None
             assert len(result) == expected_page_count
@@ -389,6 +390,23 @@ def test_selenium_chrome_context_manager_good_scrape():
 
 
 
+
+### TODO - 
+### TODO - 
+### TODO - Simplify the Tests and group into similar Functionality
+### TODO - Have functions to tests various aspects, e.g. 
+### TODO -   Connection, Multipages...
+### TODO - 
+### TODO - 
+### TODO - 
+### TODO - 
+def check_me(num):
+    assert num < 5
+
+@pytest.mark.eric2
+@pytest.mark.parametrize('num', range(10))
+def test_eric(num):
+    check_me(num)
 
 
 
