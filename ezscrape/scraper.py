@@ -9,11 +9,14 @@ import logging
 import os
 import requests
 import requests_html
-import selenium
 import sys
 import urllib.parse
 
+from selenium.common.exceptions import TimeoutException
 from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from typing import Iterator, Optional
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -23,6 +26,7 @@ CHROME_WEBDRIVER_ENV_VAR = 'CHROME_WEBDRIVER_PATH'
 DEFAULT_REQUEST_TIMEOUT = 5.0
 DEFAULT_NEXT_PAGE_TIMEOUT = 3
 DEFAULT_JAVASCRIPT_WAIT = 3.0
+DEFAULT_MAX_PAGES = 15
 
 SPECIAL_LOCAL_ADDRESSES = [
     'localhost',
@@ -55,8 +59,8 @@ class ScrapeConfig():
         self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT
         self.useragent = None
         self.attempt_multi_page = False  # TODO - Verify in the end if we even need this field or we can always do it without
-        self.next_page_elem_xpath = None
-        self.max_pages = sys.maxsize
+        self.next_page_button_xpath = None
+        self.max_pages = DEFAULT_MAX_PAGES
         self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT
 
     @property
@@ -87,7 +91,8 @@ class ScrapeResult():
         self._idx = 0
 
         self.url = url
-        self.success = False
+        # TODO - Move Success to ScrapePage
+        self.success = False # TODO - Maybe success should be for each sub page
         self.error_msg = None
 
     @property
@@ -129,7 +134,7 @@ def _validate_config_for_requests(config: ScrapeConfig):
         raise ScrapeConfigError("No Support for Javascript")
 
     if (config.attempt_multi_page or
-            (config.next_page_elem_xpath is not None)):
+            (config.next_page_button_xpath is not None)):
         raise ScrapeConfigError("No Support for Multipages, check fields")
 
 
@@ -160,7 +165,7 @@ def _scrape_url_requests(config: ScrapeConfig) -> ScrapeResult:
 
 def _validate_config_for_requests_html(config: ScrapeConfig):
     """Check if Requests can handle this config."""
-    if config.next_page_elem_xpath is not None:
+    if config.next_page_button_xpath is not None:
         raise ScrapeConfigError("No Suport for Next pages via Xpath")
 
 
@@ -213,9 +218,34 @@ def _scrape_url_requests_html(config: ScrapeConfig) -> ScrapeResult:
     return result
 
 
+
+
+
+
+'''
+public boolean retryingFindClick(By by) {
+    boolean result = false;
+    int attempts = 0;
+    while(attempts < 2) {
+        try {
+            driver.findElement(by).click();
+            result = true;
+            break;
+        } catch(StaleElementException e) {
+        }
+        attempts++;
+    }
+    return result;
+}
+'''
+
+
 def _scrape_url_selenium_chrome(config: ScrapeConfig,
                                 open_browser=None) -> ScrapeResult:
     """Scrape using Selenium with Chrome."""
+    # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
+
+
     # TODO - Support Chrome Portable Overwrite
         # String chromePath = "M:/my/googlechromeporatble.exe path"; 
         #   options.setBinary(chromepath);
@@ -235,49 +265,56 @@ def _scrape_url_selenium_chrome(config: ScrapeConfig,
     with webdriver.Chrome(
             chrome_options=chrome_options,
             executable_path=chrome_web_driver_path) as browser:
-        
-        time = datetime.datetime.now()
-        resp = browser.get(config.url)
-        timediff = datetime.datetime.now() - time
-        scrape_time = (timediff.total_seconds() * 1000 +
-                       timediff.microseconds / 1000)
 
-        result.success = True
-        result.add_scrape_page(browser.page_source, scrape_time=scrape_time)
+        xpath_bttn = config.next_page_button_xpath
+        if xpath_bttn:
+            count = 0
+            r = browser.get(config.url)
+            while True:
+                # SOME PAGE LOAD INFO AND TIPS if there are issues
+                # http://www.obeythetestinggoat.com/how-to-get-selenium-to-wait-for-page-load-after-a-click.html
 
-        '''
-        # TODO - This needs Improvement to Not Do request multiple times
-        if config.next_page_elem_xpath
-        config.next_page_elem_xpath
-        config.max_pages
+                try:
+                    time = datetime.datetime.now()
+                    element = WebDriverWait(
+                        browser, config.request_timeout).until(
+                            EC.element_to_be_clickable((By.XPATH, xpath_bttn)))
+                except TimeoutException as error:
+                    # TODO - Maybe this should be an error and success state for each sub page
+                    #result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
+                    timediff = datetime.datetime.now() - time
+                    scrape_time = (timediff.total_seconds() * 1000 +
+                                   timediff.microseconds / 1000)
+                    result.add_scrape_page(browser.page_source,
+                                           scrape_time=scrape_time)
+                    break
+                else:
+                    result.success = True
+                    timediff = datetime.datetime.now() - time
+                    scrape_time = (timediff.total_seconds() * 1000 +
+                                   timediff.microseconds / 1000)
+                    result.add_scrape_page(browser.page_source,
+                                           scrape_time=scrape_time)
 
+                    if count > config.max_pages:
+                        logger.debug(F'Paging limit of {config.max_pages} reached, stop scraping')
+                        break
 
-        TODO !!! FIX ME 
-
-
-        element = WebDriverWait(browser, 20).until(
-        EC.element_to_be_clickable((By.XPATH, "//li[@id='proxylisttable_next' and @class='fg-button ui-button ui-state-default next']/a")))
-        print('  - Wait Finished')
-        print('  - Element Enabled:', element.is_enabled())
-        completeName = os.path.join('.', F'REQUESTS-SELENIUM_{x}.html')
-        file_object = codecs.open(completeName, "w", "utf-8")
-        html = browser.page_source
-        file_object.write(html)
-        print('  - HTML Written to', completeName)
-
-        time.sleep(5)
-        element.click();
-        '''
-
-
-
-
-
-
-
-
-
-
+                    # Click the next Button
+                    element.click()
+                    count += 1
+        else:
+            time = datetime.datetime.now()
+            # TODO - If Javascript Page need to Wait, or Wait by default a bit longer
+            # TODO - SELENIUM might not need to know if it's javascript and just use a default wait time
+            # TODO - We might need an implicit wait here
+            r = browser.get(config.url)
+            timediff = datetime.datetime.now() - time
+            scrape_time = (timediff.total_seconds() * 1000 +
+                           timediff.microseconds / 1000)
+            result.success = True
+            result.add_scrape_page(browser.page_source,
+                                   scrape_time=scrape_time)
 
     return result
 
