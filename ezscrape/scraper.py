@@ -11,13 +11,29 @@
                       scraper_requests_html.py  -> Requests-HTML
                       scraper_selenium.py       -> Selenium
                       scraper.py                -> Combine all available scrapers
-    1.) Make sure all non slow and non web tests ok
-    2.) Copy Definitions
+    1.) Make sure all non slow and non web tests ok, at least most
+    2.) Copy Definitions file
+        - change existing files that use them
+        - make the tests work
     3.) Copy Requests
+        - change existing files that use them
+        - make the tests work
+        - split tests
+    4.) Copy Requests-HTML
+        - change existing files that use them
+        - make the tests work
+        - split tests
+    5.) Copy Selenium
+        - change existing files that use them
+        - make the tests work
+        - split tests
+    
+
 '''
 
 import contextlib
 import datetime
+import enum
 import http
 import ipaddress
 import logging
@@ -48,6 +64,16 @@ SPECIAL_LOCAL_ADDRESSES = [
     '0.0',
     '127.1'
 ]
+
+
+@enum.unique
+class ScrapeStatus(enum.Enum):
+    """Enum for the Download Status."""
+    TIMEOUT = 'Timeout'
+    SUCCESS = 'Success'
+    ERROR = 'Error'
+
+
 class ScrapeError(Exception):
     """Generic Page Scrape Error."""
 
@@ -264,6 +290,7 @@ def _scrape_url_selenium_chrome_for_browser(
         count = 0
         r = browser.get(config.url)
         while True:
+            count += 1
             # SOME PAGE LOAD INFO AND TIPS if there are issues
             # http://www.obeythetestinggoat.com/how-to-get-selenium-to-wait-for-page-load-after-a-click.html
 
@@ -279,7 +306,7 @@ def _scrape_url_selenium_chrome_for_browser(
                 scrape_time = (timediff.total_seconds() * 1000 +
                                 timediff.microseconds / 1000)
                 result.add_scrape_page(browser.page_source,
-                                        scrape_time=scrape_time)
+                                       scrape_time=scrape_time)
                 break
             else:
                 timediff = datetime.datetime.now() - time
@@ -289,13 +316,12 @@ def _scrape_url_selenium_chrome_for_browser(
                                        scrape_time=scrape_time,
                                        success=True)
 
-                if count > config.max_pages:
+                if count >= config.max_pages:
                     logger.debug(F'Paging limit of {config.max_pages} reached, stop scraping')
                     break
 
                 # Click the next Button
                 element.click()
-                count += 1
     else:
         time = datetime.datetime.now()
         # TODO - If Javascript Page need to Wait, or Wait by default a bit longer

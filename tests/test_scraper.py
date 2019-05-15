@@ -25,6 +25,11 @@ URL_BAD_URL = 'this is not a url'
 URL_URL_NOT_ONLINE = urljoin(LOCAL_SERVER_HTTP, 'UrlNotFound.html')
 URL_TIMEOUT = 'http://10.255.255.1/'
 
+# TODO - !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# TODO - SIMPLIFY SOME TESTS, TO NOT HAVE TO DO SAME CHECK MULTIPL TIMES
+# TODO - e.g. Don't need to check specific things like success everytime,
+# TOFO - Design Simple tests to check 1 or a few at a time
+# TODO - !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 def test_local_test_server_running():
     assert scraper.check_url(LOCAL_SERVER_HTTP, local_only=True)
@@ -287,13 +292,13 @@ def test_requests_html_limit_pages():
 ########################################
 # Tests for scrape_url_selenium_chrome()
 ########################################
+# TODO - Split This, Last pages can timeout, so it will not be success?, or need to define a better state
 # Good Scrape Tests
 SELENIUM_CHROME_GOOD_URLS = [
     #(URL_SINGLE_PAGE_JS, True, None, 1, 1, 0),
     #(URL_SINGLE_PAGE_JS_DELAYED, True, None, 1, 1, 0),
     #(URL_SINGLE_PAGE_NO_JS, False, None, 1, 1, 0),
     #(URL_MULTI_PAGE_JS_STATIC_LINKS_01, True, None, 4, 1, 1),
-    (URL_MULTI_PAGE_JS_STATIC_LINKS_01, True, R'''//a[@title='next']''', 4, scraper.DEFAULT_MAX_PAGES, 1), # Xpath doesn't indicate button clickable or not
     #(URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01, True, R'''//a[@title='next' and @class='enabled']''', 2, 2, 1),
     #(URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_02, True, R'''//a[@title='next' and @class='enabled']''', 2, 1, 2),
     #(URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True, None, 10, 1, 1),
@@ -309,13 +314,15 @@ def test_selenium_chrome_good_scrape(url, javascript, next_button_xpath, page_co
     config.javascript = javascript
     config.next_page_button_xpath = next_button_xpath
 
-    config.max_pages = 6
     config.request_timeout = 2
 
     result = scraper._scrape_url_selenium_chrome(config)
 
     print('LEN:::', len(result))
     print('MSG:::', result.error_msg)
+
+    for res in result:
+        print('PAGE:', res.html)
 
     assert result
     assert result.url == url
@@ -337,6 +344,16 @@ def test_selenium_chrome_good_scrape(url, javascript, next_button_xpath, page_co
 
         if page_count > 1:
             assert F'THIS IS PAGE {idx}/{page_count}' in page
+
+
+@pytest.mark.slow
+def test_selenium_chrome_good_scrape_max_next_page_reached():
+    config = scraper.ScrapeConfig(URL_MULTI_PAGE_JS_STATIC_LINKS_01)
+    config.next_page_button_xpath = '''//a[@title='next']'''
+    config.request_timeout = 2
+    result = scraper._scrape_url_selenium_chrome(config)
+    assert len(result) == scraper.DEFAULT_MAX_PAGES
+
 
 @pytest.mark.slow
 def test_selenium_chrome_context_manager_good_scrape():
