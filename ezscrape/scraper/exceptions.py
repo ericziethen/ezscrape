@@ -9,7 +9,3 @@ class ScrapeError(Exception):
 
 class ScrapeConfigError(ScrapeError):
     """Error with the Scrape Config."""
-
-
-class SeleniumSetupError(Exception):
-    """Exception is Selenium is not Setup Correctly."""
