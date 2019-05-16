@@ -3,13 +3,6 @@ import pytest
 import scraper.core as core
 import scraper.exceptions as exceptions
 
-'''
-# TODO
-!!! DEFINE TESTS, CHECK NEW ONES AND CHECK EXISTING
-!!! IMPORT COMMON TEST DATA AND CONSTANTS IF NEEDED
-!!! DEFINE PYTEST MARKERS AND DOCUMENT IN PYTEST.INI
-'''
-
 
 def test_scrape_config_default_values_set():
     url = 'fake_url'
