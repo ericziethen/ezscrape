@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
+"""Module providing core definitions for scraper functionality."""
+
 import enum
 import logging
 
-import scraper
-
-from typing import Iterator, Optional, Type
+from typing import Iterator, List
 
 import scraper.exceptions as exceptions
 
@@ -20,6 +20,7 @@ DEFAULT_MAX_PAGES = 15
 @enum.unique
 class ScrapeStatus(enum.Enum):
     """Enum for the Download Status."""
+
     # pylint: disable=invalid-name
     TIMEOUT = 'Timeout'
     SUCCESS = 'Success'
@@ -37,20 +38,22 @@ class ScrapeConfig():
         self.javascript = False
         self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT
         self.useragent = None
-        self.attempt_multi_page = False  # TODO - Verify in the end if we even need this field or we can always do it without
+        self.attempt_multi_page = False
         self.next_page_button_xpath = None
         self.max_pages = DEFAULT_MAX_PAGES
         self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT
 
     @property
-    def url(self):
+    def url(self) -> str:
+        """Property to define the Url attribute."""
         return self._url
 
     @url.setter
-    def url(self, new_url: str):
+    def url(self, new_url: str) -> None:
+        """Setter for the Url attribute."""
         if (not new_url) or (not isinstance(new_url, str)):
             raise exceptions.ScrapeConfigError('Url cannot be blank')
-        self._url = new_url
+        self._url = new_url  # pylint: disable=attribute-defined-outside-init
 
 
 class ScrapePage():
@@ -59,32 +62,32 @@ class ScrapePage():
     def __init__(self, html: str):
         """Initialize the scrape page data."""
         self.html = html
-        self.request_time_ms: Optional[float] = None
+        self.request_time_ms: int = 0
         self.success = False
 
 
 class ScrapeResult():
     """Class to keep the Download Result Data."""
-    
+
     def __init__(self, url: str):
         """Initialize the Scrape Result."""
-        self._scrape_pages = []
+        self._scrape_pages: List[ScrapePage] = []
         self._idx = 0
 
         self.url = url
-        # TODO - Move Success to ScrapePage
         self.error_msg = None
 
     @property
-    def request_time_ms(self):
+    def request_time_ms(self) -> int:
+        """Property to calculate the combined request time."""
         req_time = 0
         for page in self:
             req_time += page.request_time_ms
         return req_time
 
     def add_scrape_page(self, html: str, *,
-                        scrape_time: Optional[float] = None,
-                        success: bool = False):
+                        scrape_time: int = 0,
+                        success: bool = False) -> None:
         """Add a scraped page."""
         page = ScrapePage(html)
         page.request_time_ms = scrape_time
@@ -95,7 +98,7 @@ class ScrapeResult():
         self._idx = 0
         return self
 
-    def __next__(self) -> Type[ScrapePage]:
+    def __next__(self) -> ScrapePage:
         try:
             item = self._scrape_pages[self._idx]
         except IndexError:
@@ -107,7 +110,7 @@ class ScrapeResult():
         return len(self._scrape_pages)
 
     def __bool__(self) -> bool:
-        return bool(self._scrape_pages)
+        return len(self) > 0
 
 
 class Scraper():
@@ -115,22 +118,27 @@ class Scraper():
 
     def __init__(self, config: ScrapeConfig):
         """Initialize the Scrape Class."""
-        self._config = config
+        self.config: ScrapeConfig = config
 
-    def scrape(self) -> Type[ScrapeResult]:
-        """Base function for scraping the config."""
+    def scrape(self) -> ScrapeResult:
+        """Scrape based on the set config."""
         raise NotImplementedError
 
     def _validate_config(self) -> bool:
-        """Validation function for the config."""
+        """Validate the Scrapers config."""
         return True
 
     @property
-    def config(self):
+    def config(self) -> ScrapeConfig:
+        """Property to define the config parameter."""
         return self._config
 
     @config.setter
     def config(self, new_config: ScrapeConfig) -> None:
-        if not new_config:
+        if new_config is None:
             raise ValueError("Config must be provided")
+
+        # pylint: disable=attribute-defined-outside-init
+        self._config = new_config
+        # pylint: enable=attribute-defined-outside-init
         self._validate_config()

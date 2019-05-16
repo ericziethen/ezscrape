@@ -87,44 +87,6 @@ def test_check_url_local_only_exception(url):
         scraper.check_url(url, local_only=True)
 
 
-########################################
-# Tests for Class ScrapeConfig 
-########################################
-
-def test_valid_scrape_config():
-    url = 'fake_url'
-    config = scraper.ScrapeConfig(url)
-    assert config.request_timeout == scraper.DEFAULT_REQUEST_TIMEOUT
-    assert config.proxy_server == None
-    assert config.javascript == False
-    assert config.javascript_wait == scraper.DEFAULT_JAVASCRIPT_WAIT
-    assert config.useragent == None
-    assert config.next_page_button_xpath == None
-    assert config.max_pages == scraper.DEFAULT_MAX_PAGES
-    assert config.next_page_timeout == scraper.DEFAULT_NEXT_PAGE_TIMEOUT
-    assert config.attempt_multi_page == False
-
-    config.request_timeout = 30
-    config.proxy_server = 'fake_proxy:fake_port'
-    config.javascript = True
-    config.javascript_wait = 5
-    config.useragent = 'agent'
-    config.next_page_button_xpath = 'xpath'
-    config.max_pages = 15
-    config.next_page_timeout = 4
-    config.attempt_multi_page = False
-
-    assert config.url == url
-
-@pytest.mark.parametrize('invalid_url', [None, '', 15])
-def test_invalid_scrape_config(invalid_url):
-    with pytest.raises(scraper.ScrapeConfigError):
-        scraper.ScrapeConfig(invalid_url)
-
-    valid_config = scraper.ScrapeConfig('valid_url')
-    with pytest.raises(scraper.ScrapeConfigError):
-        valid_config.url = invalid_url
-
 
 ########################################
 # Tests for scrape_url_requests()
