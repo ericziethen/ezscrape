@@ -76,7 +76,7 @@ def test_scraper_scrape_not_implemented():
 def test_scraper_valid_config():
     config = core.ScrapeConfig('url')
 
-    assert core.Scraper._validate_config(config)
+    core.Scraper._validate_config(config)
     scraper = core.Scraper(core.ScrapeConfig('url'))
     assert scraper is not None
 
