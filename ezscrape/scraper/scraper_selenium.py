@@ -55,7 +55,7 @@ class SeleniumChromeScraper(core.Scraper):
         super().__init__(config)
         self.browser = browser
 
-    def scrape(self) -> Type[core.ScrapeResult]:
+    def scrape(self) -> core.ScrapeResult:
         """Handle existing browser session or create a new one."""
         if self.browser is not None:
             result = self._scrape_with_browser(self.browser)
@@ -65,7 +65,7 @@ class SeleniumChromeScraper(core.Scraper):
         return result
 
 
-    def _scrape_with_browser(self, browser=None) -> Type[core.ScrapeResult]:
+    def _scrape_with_browser(self, browser=None) -> core.ScrapeResult:
         """Scrape using Selenium with Chrome."""
         # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
         

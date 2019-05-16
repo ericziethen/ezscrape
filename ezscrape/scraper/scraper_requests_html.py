@@ -6,8 +6,6 @@ import datetime
 import http
 import logging
 
-from typing import Type
-
 import requests
 import requests_html
 
@@ -20,7 +18,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 class RequestsHtmlScraper(core.Scraper):
     """Implement the Scraper using requests-html."""
 
-    def scrape(self) -> Type[core.ScrapeResult]:
+    def scrape(self) -> core.ScrapeResult:
         """Scrape using Requests-Html."""
         result = core.ScrapeResult(self.config.url)
         session = requests_html.HTMLSession()
