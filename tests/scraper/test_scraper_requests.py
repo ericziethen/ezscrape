@@ -51,6 +51,7 @@ REQUESTS_GOOD_URLS = [
     (common.URL_MULTI_PAGE_NO_JS_START_GOOD),
     (common.URL_MULTI_PAGE_JS_STATIC_LINKS_01)
 ]
+@pytest.mark.requests
 @pytest.mark.parametrize('url', REQUESTS_GOOD_URLS)
 def test_requests_scraper_scrape_ok(url):
     config = core.ScrapeConfig(url)
@@ -74,6 +75,7 @@ REQUESTS_BAD_URLS = [
     (common.URL_BAD_URL),
     (common.URL_URL_NOT_ONLINE)
 ]
+@pytest.mark.requests
 @pytest.mark.parametrize('url', REQUESTS_BAD_URLS)
 def test_requests_bad_url(url):
     config = core.ScrapeConfig(url)
@@ -85,6 +87,7 @@ def test_requests_bad_url(url):
     assert result.error_msg
 
 
+@pytest.mark.requests
 def test_requests_scraper_scrape_timeout():
     config = core.ScrapeConfig(common.URL_TIMEOUT)
     config.request_timeout = 2
