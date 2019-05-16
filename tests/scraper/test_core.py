@@ -73,14 +73,18 @@ def test_scraper_scrape_not_implemented():
     with pytest.raises(NotImplementedError):
         scraper.scrape()
 
+def test_scraper_valid_config():
+    config = core.ScrapeConfig('url')
 
-def test_scraper_validate_result():
+    assert core.Scraper._validate_config(config)
     scraper = core.Scraper(core.ScrapeConfig('url'))
-
-    assert scraper._validate_config()
+    assert scraper is not None
 
 
 def test_scraper_invalid_config():
+    with pytest.raises(ValueError):
+        core.Scraper._validate_config(None)
+
     with pytest.raises(ValueError):
         core.Scraper(None)
 

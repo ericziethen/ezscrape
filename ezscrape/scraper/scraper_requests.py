@@ -39,12 +39,13 @@ class RequestsScraper(core.Scraper):
                     F'{http.HTTPStatus(resp.status_code).phrase}')
         return result
 
-    def _validate_config(self) -> bool:
+    @classmethod
+    def _validate_config(cls, config: core.ScrapeConfig):
         """Verify the config can be scraped by requests."""
-        if self.config.javascript:
+        if config.javascript:
             raise exceptions.ScrapeConfigError("No Support for Javascript")
 
-        if (self.config.attempt_multi_page or
-                (self.config.next_page_button_xpath is not None)):
+        if (config.attempt_multi_page or
+                (config.next_page_button_xpath is not None)):
             raise exceptions.ScrapeConfigError(
                 "No Support for Multipages, check fields")

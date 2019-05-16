@@ -65,7 +65,7 @@ class RequestsHtmlScraper(core.Scraper):
 
         return result
 
-    def _validate_config(self) -> bool:
+    def _validate_config(self):
         """Verify the config can be scraped by requests-html."""
         if self.config.next_page_button_xpath is not None:
             raise exceptions.ScrapeConfigError(

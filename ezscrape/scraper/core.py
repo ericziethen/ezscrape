@@ -75,7 +75,7 @@ class ScrapeResult():
         self._idx = 0
 
         self.url = url
-        self.error_msg = None
+        self.error_msg = ''
 
     @property
     def request_time_ms(self) -> int:
@@ -124,9 +124,11 @@ class Scraper():
         """Scrape based on the set config."""
         raise NotImplementedError
 
-    def _validate_config(self) -> bool:
+    @classmethod
+    def _validate_config(cls, config: ScrapeConfig):
         """Validate the Scrapers config."""
-        return True
+        if not config:
+            raise ValueError("Config must be provided")
 
     @property
     def config(self) -> ScrapeConfig:
@@ -135,10 +137,12 @@ class Scraper():
 
     @config.setter
     def config(self, new_config: ScrapeConfig) -> None:
+        # Check in setter because True for subclasses as well
         if new_config is None:
             raise ValueError("Config must be provided")
+
+        self._validate_config(new_config)
 
         # pylint: disable=attribute-defined-outside-init
         self._config = new_config
         # pylint: enable=attribute-defined-outside-init
-        self._validate_config()
