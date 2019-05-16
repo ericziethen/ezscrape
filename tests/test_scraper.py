@@ -91,62 +91,13 @@ def test_check_url_local_only_exception(url):
 ########################################
 # Tests for scrape_url_requests()
 ########################################
-# Parameter Issues
-REQUESTS_BAD_CONFIG = [
-    (URL_SINGLE_PAGE_NO_JS, True, False, False),
-    (URL_SINGLE_PAGE_NO_JS, False, True, False),
-    (URL_SINGLE_PAGE_NO_JS, False, False, True)
-]
-@pytest.mark.parametrize('url, javascript, next_page_button_xpath, multi_page', REQUESTS_BAD_CONFIG)
-def test_requests_invalid_config(url, javascript, next_page_button_xpath, multi_page):
-    config = scraper.ScrapeConfig(url)
-    config.javascript = javascript
-    if next_page_button_xpath:
-        config.next_page_button_xpath = 'xpath'
-    config.attempt_multi_page = multi_page
 
-    # Don't need to check next_page_timeout or max_pages, they alone dont trigger multipages
-
-    with pytest.raises(scraper.ScrapeConfigError):
-        resp = scraper._scrape_url_requests(config)
 
 # Good Scrape Tests
-REQUESTS_GOOD_URLS = [
-    (URL_SINGLE_PAGE_JS),
-    (URL_SINGLE_PAGE_JS_DELAYED),
-    (URL_SINGLE_PAGE_NO_JS),
-    (URL_MULTI_PAGE_JS_DYNAMIC_LINKS),
-    (URL_MULTI_PAGE_NO_JS_START_GOOD),
-    (URL_MULTI_PAGE_JS_STATIC_LINKS_01)
-]
-@pytest.mark.parametrize('url', REQUESTS_GOOD_URLS)
-def test_requests_good_scrape(url):
-    config = scraper.ScrapeConfig(url)
-    result = scraper._scrape_url_requests(config)
 
-    assert result.url == url
-    assert result.request_time_ms is not None
-    assert result.error_msg == None
-    assert len(result) == 1
-    assert result._scrape_pages[0].success
-
-    page = result._scrape_pages[0].html
-    assert NON_JS_TEST_STRING in page
-    assert JS_TEST_STRING not in page
 
 # Scrape Issues
-REQUESTS_BAD_URLS = [
-    (URL_BAD_URL),
-    (URL_URL_NOT_ONLINE)
-]
-@pytest.mark.parametrize('url', REQUESTS_BAD_URLS)
-def test_requests_bad_url(url):
-    result = scraper._scrape_url_requests(scraper.ScrapeConfig(url))
 
-    assert not result
-    assert result.url == url
-    assert result.error_msg is not None
-    assert not result
 
 
 def test_requests_timeout():
@@ -157,7 +108,7 @@ def test_requests_timeout():
     assert not result
     assert result.error_msg is not None
     assert not result
-    assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
+    assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for function overhead
 
 
 ########################################
