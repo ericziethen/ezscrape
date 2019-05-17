@@ -56,6 +56,7 @@ def test_requests_html_scraper_scrape_ok(url, load_javascript, expect_javascript
     result = scraper_requests_html.RequestsHtmlScraper(config).scrape()
 
     assert result.url == url
+    assert result.status == core.ScrapeStatus.SUCCESS
     assert result.request_time_ms > 0
     assert not result.error_msg
     assert len(result) == expected_page_count
@@ -116,4 +117,4 @@ def test_requests_html_limit_pages():
 
     result = scraper_requests_html.RequestsHtmlScraper(config).scrape()
 
-    assert len(result) == config.max_pages + 1
+    assert len(result) == config.max_pages

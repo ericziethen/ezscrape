@@ -76,6 +76,9 @@ class ScrapeResult():
         self._idx = 0
 
         self.url = url
+
+        # TODO - Status should be (_scrape_pages > 0) and (not error_msg)
+        # TODO - Or some other logic
         self.status: ScrapeStatus = ScrapeStatus.UNKNOWN
         self.error_msg = ''
 

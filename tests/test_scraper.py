@@ -89,32 +89,6 @@ def test_check_url_local_only_exception(url):
 
 
 ########################################
-# Tests for scrape_url_requests_html()
-########################################
-
-
-
-
-
-def test_requests_html_timeout():
-    config = scraper.ScrapeConfig(URL_TIMEOUT)
-    config.request_timeout = 2
-
-    result = scraper._scrape_url_requests_html(config)
-    assert result.error_msg is not None
-    assert not result
-    assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
-
-def test_requests_html_limit_pages():
-    config = scraper.ScrapeConfig(URL_MULTI_PAGE_NO_JS_START_GOOD)
-    config.attempt_multi_page = True
-    config.max_pages = 1
-    result = scraper._scrape_url_requests_html(config)
-
-    assert len(result) == config.max_pages + 1
-
-
-########################################
 # Tests for scrape_url_selenium_chrome()
 ########################################
 # TODO - Split This, Last pages can timeout, so it will not be success?, or need to define a better state

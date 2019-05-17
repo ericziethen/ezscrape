@@ -50,7 +50,7 @@ def SeleniumChromeSession():
 
 class SeleniumChromeScraper(core.Scraper):
     """Implement the Scraper using requests."""
-    def __init__(self, config: ScrapeConfig, *, browser=None):
+    def __init__(self, config: core.ScrapeConfig, *, browser=None):
         """Initialize the Selenium Scraper."""
         super().__init__(config)
         self.browser = browser
@@ -69,11 +69,11 @@ class SeleniumChromeScraper(core.Scraper):
         """Scrape using Selenium with Chrome."""
         # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
         
-        result = core.ScrapeResult(config.url)
-        xpath_bttn = config.next_page_button_xpath
+        result = core.ScrapeResult(self.config.url)
+        xpath_bttn = self.config.next_page_button_xpath
         if xpath_bttn:
             count = 0
-            r = browser.get(config.url)
+            r = browser.get(self.config.url)
             while True:
                 count += 1
                 # SOME PAGE LOAD INFO AND TIPS if there are issues
@@ -82,41 +82,45 @@ class SeleniumChromeScraper(core.Scraper):
                 try:
                     time = datetime.datetime.now()
                     element = WebDriverWait(
-                        browser, config.request_timeout).until(
+                        browser, self.config.request_timeout).until(
                             EC.element_to_be_clickable((By.XPATH, xpath_bttn)))
                 except TimeoutException as error:
+                    result.status = core.ScrapeStatus.TIMEOUT
                     # TODO - Maybe this should be an error and success state for each sub page
                     #result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
                     timediff = datetime.datetime.now() - time
                     scrape_time = (timediff.total_seconds() * 1000 +
-                                timediff.microseconds / 1000)
+                                   timediff.microseconds / 1000)
                     result.add_scrape_page(browser.page_source,
-                                        scrape_time=scrape_time)
+                                           scrape_time=scrape_time,
+                                           status=core.ScrapeStatus.TIMEOUT)
                     break
                 else:
+                    result.status = core.ScrapeStatus.SUCCESS
                     timediff = datetime.datetime.now() - time
                     scrape_time = (timediff.total_seconds() * 1000 +
-                                timediff.microseconds / 1000)
+                                   timediff.microseconds / 1000)
                     result.add_scrape_page(browser.page_source,
                                         scrape_time=scrape_time,
-                                        success=True)
+                                        status=core.ScrapeStatus.SUCCESS)
 
-                    if count >= config.max_pages:
-                        logger.debug(F'Paging limit of {config.max_pages} reached, stop scraping')
+                    if count >= self.config.max_pages:
+                        logger.debug(F'Paging limit of {self.config.max_pages} reached, stop scraping')
                         break
 
                     # Click the next Button
                     element.click()
         else:
+            result.status = core.ScrapeStatus.SUCCESS
             time = datetime.datetime.now()
             # TODO - If Javascript Page need to Wait, or Wait by default a bit longer
             # TODO - SELENIUM might not need to know if it's javascript and just use a default wait time
             # TODO - We might need an implicit wait here
-            r = browser.get(config.url)
+            r = browser.get(self.config.url)
             timediff = datetime.datetime.now() - time
             scrape_time = (timediff.total_seconds() * 1000 +
-                        timediff.microseconds / 1000)
+                           timediff.microseconds / 1000)
             result.add_scrape_page(browser.page_source,
                                 scrape_time=scrape_time,
-                                success=True)
+                                status=core.ScrapeStatus.SUCCESS)
         return result

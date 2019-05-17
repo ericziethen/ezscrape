@@ -24,6 +24,9 @@ class RequestsHtmlScraper(core.Scraper):
     # TODO - MAYBE HAVE 1 FUNCTION TO CALL THE ACTUAL REQUEST
     # TODO - AND ANOTHER THAT HANDLES THE RESULT, e.g. process_result()
     # THAT CAN BE SHARED BY ALL
+    # Maybe even have a function that catches Request exceptions?
+    # OR MAYBE LEAVE FOR NOW AND GET IT WORKING
+    # TODO - MAYBE HAVE A MODE, SELENIUM AND REQUESTS ONLY IF SELENIUM CAN HANDLE ALL NEXT PAGES
     def scrape(self) -> core.ScrapeResult:
         """Scrape using Requests-Html."""
         result = core.ScrapeResult(self.config.url)
