@@ -82,7 +82,7 @@ class ScrapeResult():
     @property
     def request_time_ms(self) -> float:
         """Property to calculate the combined request time."""
-        req_time = 0
+        req_time = 0.0
         for page in self:
             req_time += page.request_time_ms
         return req_time
@@ -127,9 +127,9 @@ class Scraper():
         raise NotImplementedError
 
     @classmethod
-    def _validate_config(cls, config: ScrapeConfig):
+    def _validate_config(cls, config: ScrapeConfig) -> None:
         """Validate the Scrapers config."""
-        if not config:
+        if config is None:
             raise ValueError("Config must be provided")
 
     @property

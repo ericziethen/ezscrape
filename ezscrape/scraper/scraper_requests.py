@@ -46,7 +46,7 @@ class RequestsScraper(core.Scraper):
         return result
 
     @classmethod
-    def _validate_config(cls, config: core.ScrapeConfig):
+    def _validate_config(cls, config: core.ScrapeConfig) -> None:
         """Verify the config can be scraped by requests."""
         if config.javascript:
             raise exceptions.ScrapeConfigError("No Support for Javascript")
