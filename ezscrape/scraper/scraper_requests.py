@@ -24,16 +24,22 @@ class RequestsScraper(core.Scraper):
         try:
             resp = requests.request('get', self.config.url,
                                     timeout=self.config.request_timeout)
+        except requests.exceptions.Timeout as error:
+            result.status = core.ScrapeStatus.TIMEOUT
+            result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
         except requests.RequestException as error:
+            result.status = core.ScrapeStatus.ERROR
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
         else:
             if resp.status_code == 200:
+                result.status = core.ScrapeStatus.SUCCESS
                 timediff = datetime.datetime.now() - time
                 scrape_time = (timediff.total_seconds() * 1000 +
                                timediff.microseconds / 1000)
                 result.add_scrape_page(resp.text, scrape_time=scrape_time,
-                                       success=True)
+                                       status=core.ScrapeStatus.SUCCESS)
             else:
+                result.status = core.ScrapeStatus.ERROR
                 result.error_msg = (
                     F'HTTP Error: {resp.status_code} - '
                     F'{http.HTTPStatus(resp.status_code).phrase}')

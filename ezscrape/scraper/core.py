@@ -22,6 +22,7 @@ class ScrapeStatus(enum.Enum):
     """Enum for the Download Status."""
 
     # pylint: disable=invalid-name
+    UNKNOWN = 'Unknown'
     TIMEOUT = 'Timeout'
     SUCCESS = 'Success'
     ERROR = 'Error'
@@ -62,8 +63,8 @@ class ScrapePage():
     def __init__(self, html: str):
         """Initialize the scrape page data."""
         self.html = html
-        self.request_time_ms: int = 0
-        self.success = False
+        self.request_time_ms: float = 0
+        self.status = ScrapeStatus.UNKNOWN
 
 
 class ScrapeResult():
@@ -75,10 +76,11 @@ class ScrapeResult():
         self._idx = 0
 
         self.url = url
+        self.status: ScrapeStatus = ScrapeStatus.UNKNOWN
         self.error_msg = ''
 
     @property
-    def request_time_ms(self) -> int:
+    def request_time_ms(self) -> float:
         """Property to calculate the combined request time."""
         req_time = 0
         for page in self:
@@ -86,12 +88,12 @@ class ScrapeResult():
         return req_time
 
     def add_scrape_page(self, html: str, *,
-                        scrape_time: int = 0,
-                        success: bool = False) -> None:
+                        scrape_time: float = 0,
+                        status: ScrapeStatus) -> None:
         """Add a scraped page."""
         page = ScrapePage(html)
         page.request_time_ms = scrape_time
-        page.success = success
+        page.status = status
         self._scrape_pages.append(page)
 
     def __iter__(self) -> Iterator[ScrapePage]:

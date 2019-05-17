@@ -38,11 +38,11 @@ def test_scrape_result_no_pages():
 def test_scrape_result_page_count():
     result = core.ScrapeResult('url')
     assert len(result) == 0
-    result.add_scrape_page('html1')
+    result.add_scrape_page('html1', status=core.ScrapeStatus.SUCCESS)
     assert len(result) == 1
-    result.add_scrape_page('html2')
+    result.add_scrape_page('html2', status=core.ScrapeStatus.SUCCESS)
     assert len(result) == 2
-    result.add_scrape_page('html3')
+    result.add_scrape_page('html3', status=core.ScrapeStatus.SUCCESS)
     assert len(result) == 3
 
 
@@ -50,9 +50,9 @@ def test_scrape_result_multiple_pages_added():
     result = core.ScrapeResult('url')
 
     entries = ['html1', 'html2', 'html3']
-    result.add_scrape_page(entries[0])
-    result.add_scrape_page(entries[1])
-    result.add_scrape_page(entries[2])
+    result.add_scrape_page(entries[0], status=core.ScrapeStatus.SUCCESS)
+    result.add_scrape_page(entries[1], status=core.ScrapeStatus.SUCCESS)
+    result.add_scrape_page(entries[2], status=core.ScrapeStatus.SUCCESS)
 
     for idx, page in enumerate(result):
         assert page.html == entries[idx]
@@ -60,9 +60,9 @@ def test_scrape_result_multiple_pages_added():
 
 def test_scrape_result_overall_request_time():
     result = core.ScrapeResult('url')
-    result.add_scrape_page('html1', scrape_time=100)
-    result.add_scrape_page('html2', scrape_time=300)
-    result.add_scrape_page('html3', scrape_time=400)
+    result.add_scrape_page('html1', status=core.ScrapeStatus.SUCCESS, scrape_time=100)
+    result.add_scrape_page('html2', status=core.ScrapeStatus.SUCCESS, scrape_time=300)
+    result.add_scrape_page('html3', status=core.ScrapeStatus.SUCCESS, scrape_time=400)
 
     assert result.request_time_ms == 800
 

@@ -60,10 +60,11 @@ def test_requests_scraper_scrape_ok(url):
 
     # Validate Result has the correct Data
     assert result.url == url
+    assert result.status == core.ScrapeStatus.SUCCESS
     assert result.request_time_ms > 0
     assert not result.error_msg
     assert len(result) == 1
-    assert result._scrape_pages[0].success
+    assert result._scrape_pages[0].status == core.ScrapeStatus.SUCCESS
 
     # Validate HTML scraped succesfully
     page = result._scrape_pages[0].html
@@ -85,6 +86,7 @@ def test_requests_bad_url(url):
     assert not result
     assert result.url == url
     assert result.error_msg
+    assert result.status == core.ScrapeStatus.ERROR
 
 
 @pytest.mark.requests
@@ -95,6 +97,7 @@ def test_requests_scraper_scrape_timeout():
     result = scraper.scrape()
 
     assert not result
+    assert result.status == core.ScrapeStatus.TIMEOUT
     assert result.error_msg is not None
     assert not result
     assert result.request_time_ms < (config.request_timeout + 0.5) * 1000  # Account for function overhead
