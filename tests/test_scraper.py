@@ -89,100 +89,12 @@ def test_check_url_local_only_exception(url):
 
 
 ########################################
-# Tests for scrape_url_requests()
-########################################
-
-
-# Good Scrape Tests
-
-
-# Scrape Issues
-
-
-
-def test_requests_timeout():
-    config = scraper.ScrapeConfig(URL_TIMEOUT)
-    config.request_timeout = 2
-
-    result = scraper._scrape_url_requests(config)
-    assert not result
-    assert result.error_msg is not None
-    assert not result
-    assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for function overhead
-
-
-########################################
 # Tests for scrape_url_requests_html()
 ########################################
-# Parameter Issues
-def test_requests_html_invalid_config():
-    config = scraper.ScrapeConfig(URL_SINGLE_PAGE_JS)
-    config.next_page_button_xpath = 'xpath'
 
-    with pytest.raises(scraper.ScrapeConfigError):
-        resp = scraper._scrape_url_requests_html(config)
 
-# Good Scrape Tests
-REQUESTS_HTML_GOOD_URLS = [
-    (URL_SINGLE_PAGE_JS, True, True, 1),
-    (URL_SINGLE_PAGE_JS, False, False, 1),
-    (URL_SINGLE_PAGE_JS_DELAYED, True, True, 1),
-    (URL_SINGLE_PAGE_JS_DELAYED, False, False, 1),
-    (URL_SINGLE_PAGE_NO_JS, False, False, 1),
-    (URL_SINGLE_PAGE_NO_JS, True, False, 1),
-    (URL_MULTI_PAGE_JS_STATIC_LINKS_01, True, True, 1),
-    (URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True, True, 1),
-    (URL_MULTI_PAGE_JS_DYNAMIC_LINKS, False, False, 1),
-    (URL_MULTI_PAGE_NO_JS_START_GOOD, False, False, 3),
-    (URL_MULTI_PAGE_NO_JS_START_GOOD, True, False, 3)
-]
-@pytest.mark.parametrize('url, load_javascript, expect_javascript, expected_page_count', REQUESTS_HTML_GOOD_URLS)
-def test_requests_html_good_scrape(url, load_javascript, expect_javascript, expected_page_count):
-    config = scraper.ScrapeConfig(url)
-    config.javascript = load_javascript
-    config.javascript_wait = 0.2
-    if expected_page_count > 1:
-        config.attempt_multi_page = True
-    result = scraper._scrape_url_requests_html(config)
 
-    assert result.url == url
-    assert result.request_time_ms is not None
-    assert result.error_msg is None
-    assert len(result) == expected_page_count
 
-    # Search String Found
-    for idx, scrape_result in enumerate(result):
-        assert scrape_result.success
-        page = scrape_result.html
-        print(F'CHECK PAGE: {idx}, page: "{page}"')
-        assert NON_JS_TEST_STRING in page
-
-        if expect_javascript:
-            assert JS_TEST_STRING in page
-        else:
-            assert JS_TEST_STRING not in page
-
-        if expected_page_count > 1:
-            assert F'THIS IS PAGE {idx+1}/{expected_page_count}' in page
-
-# Scrape Issues
-REQUESTS_HTML_BAD_URLS = [
-    (URL_BAD_URL, None, None),
-    (URL_URL_NOT_ONLINE, None, None)
-]
-@pytest.mark.parametrize('url, req_timeout, js_timeout', REQUESTS_HTML_BAD_URLS)
-def test_requests_html_bad_url(url, req_timeout, js_timeout):
-    config = scraper.ScrapeConfig(url)
-    if req_timeout:
-        config.request_timeout = req_timeout
-    if js_timeout:
-        config.javascript_wait = js_timeout
-
-    result = scraper._scrape_url_requests_html(config)
-
-    assert result.url == url
-    assert result.error_msg is not None
-    assert not result
 
 def test_requests_html_timeout():
     config = scraper.ScrapeConfig(URL_TIMEOUT)

@@ -18,6 +18,12 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 class RequestsHtmlScraper(core.Scraper):
     """Implement the Scraper using requests-html."""
 
+    # TODO - THIS FUNCTION IS NEARLY IDENTICAL TO THE REQUESTS ONE,
+    # TODO - MAYBE WE CAN SHARE MORE INSTEAD OF USEING THE SAME
+    # THE REAL DIFFERENCE IS THE MULTI PAGES AND SOME SETTINGS
+    # TODO - MAYBE HAVE 1 FUNCTION TO CALL THE ACTUAL REQUEST
+    # TODO - AND ANOTHER THAT HANDLES THE RESULT, e.g. process_result()
+    # THAT CAN BE SHARED BY ALL
     def scrape(self) -> core.ScrapeResult:
         """Scrape using Requests-Html."""
         result = core.ScrapeResult(self.config.url)
@@ -35,19 +41,25 @@ class RequestsHtmlScraper(core.Scraper):
             try:
                 resp = session.get(
                     next_url, timeout=self.config.request_timeout)
-            except requests.RequestException as err:
-                result.error_msg = F'EXCEPTION: {type(err).__name__} - {err}'
+            except requests.exceptions.Timeout as error:
+                result.status = core.ScrapeStatus.TIMEOUT
+                result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
+            except requests.RequestException as error:
+                result.status = core.ScrapeStatus.ERROR
+                result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
             else:
                 if self.config.javascript:
                     resp.html.render(sleep=self.config.javascript_wait)
                 if resp.status_code == 200:
+                    result.status = core.ScrapeStatus.SUCCESS
                     timediff = datetime.datetime.now() - time
                     scrape_time = (timediff.total_seconds() * 1000 +
                                    timediff.microseconds / 1000)
                     result.add_scrape_page(resp.html.html,
                                            scrape_time=scrape_time,
-                                           success=True)
+                                           status=core.ScrapeStatus.SUCCESS)
                 else:
+                    result.status = core.ScrapeStatus.ERROR
                     result.error_msg = (
                         F'HTTP Error: {resp.status_code} - '
                         F'{http.HTTPStatus(resp.status_code).phrase}')
@@ -65,8 +77,9 @@ class RequestsHtmlScraper(core.Scraper):
 
         return result
 
-    def _validate_config(self):
+    @classmethod
+    def _validate_config(cls, config: core.ScrapeConfig) -> None:
         """Verify the config can be scraped by requests-html."""
-        if self.config.next_page_button_xpath is not None:
+        if config.next_page_button_xpath is not None:
             raise exceptions.ScrapeConfigError(
                 "No Suport for Next pages via Xpath")

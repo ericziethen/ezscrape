@@ -7,28 +7,22 @@ import tests.common as common
 import ezscrape.scraper.scraper_requests as scraper_requests
 
 
-'''
-# TODO
-!!! DEFINE TESTS, CHECK NEW ONES AND CHECK EXISTING
-!!! IMPORT COMMON TEST DATA AND CONSTANTS IF NEEDED
-!!! DEFINE PYTEST MARKERS AND DOCUMENT IN PYTEST.INI
-'''
 def test_requests_scraper_valid_config():
     config = core.ScrapeConfig('url')
 
     scraper_requests.RequestsScraper._validate_config(config)
-    scraper = scraper_requests.RequestsScraper(core.ScrapeConfig('url'))
+    scraper = scraper_requests.RequestsScraper(config)
     assert scraper is not None
 
 
 REQUESTS_BAD_CONFIG = [
-    (common.URL_SINGLE_PAGE_NO_JS, True, False, False),
-    (common.URL_SINGLE_PAGE_NO_JS, False, True, False),
-    (common.URL_SINGLE_PAGE_NO_JS, False, False, True)
+    (True, False, False),
+    (False, True, False),
+    (False, False, True)
 ]
-@pytest.mark.parametrize('url, javascript, next_page_button_xpath, multi_page', REQUESTS_BAD_CONFIG)
-def test_requests_scraper_invalid_config(url, javascript, next_page_button_xpath, multi_page):
-    config = core.ScrapeConfig(url)
+@pytest.mark.parametrize('javascript, next_page_button_xpath, multi_page', REQUESTS_BAD_CONFIG)
+def test_requests_scraper_invalid_config(javascript, next_page_button_xpath, multi_page):
+    config = core.ScrapeConfig('url')
     config.javascript = javascript
     if next_page_button_xpath:
         config.next_page_button_xpath = 'xpath'
