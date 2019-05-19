@@ -43,6 +43,7 @@ class RequestsScraper(core.Scraper):
                 result.error_msg = (
                     F'HTTP Error: {resp.status_code} - '
                     F'{http.HTTPStatus(resp.status_code).phrase}')
+            resp.close()
         return result
 
     @classmethod
@@ -51,7 +52,6 @@ class RequestsScraper(core.Scraper):
         if config.javascript:
             raise exceptions.ScrapeConfigError("No Support for Javascript")
 
-        if (config.attempt_multi_page or
-                (config.wait_for_xpath is not None)):
+        if config.attempt_multi_page or config.wait_for_xpath:
             raise exceptions.ScrapeConfigError(
                 "No Support for Multipages, check fields")

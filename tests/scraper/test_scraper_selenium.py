@@ -44,6 +44,7 @@ SELENIUM_CHROME_GOOD_URLS_SINGLE_PAGE = [
 @pytest.mark.parametrize('url, javascript', SELENIUM_CHROME_GOOD_URLS_SINGLE_PAGE)
 def test_selenium_scraper_scrape_ok_single_page(url, javascript):
     config = core.ScrapeConfig(url)
+    config.wait_for_xpath = '/html'
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
     assert result.url == url
@@ -60,11 +61,13 @@ def test_selenium_scraper_scrape_ok_single_page(url, javascript):
         assert common.JS_TEST_STRING not in page
 
 
+@pytest.mark.slow
 @pytest.mark.selenium
 def test_selenium_scraper_scrape_paging():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01)
     config.wait_for_xpath = R'''//a[@title='next' and @class='enabled']'''
     config.next_page_timeout = 0
+    config.attempt_multi_page = True
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
     assert len(result) == 2
 
@@ -82,10 +85,12 @@ def test_selenium_chrome_good_scrape_max_next_page_reached():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_JS_STATIC_LINKS_01)
     config.wait_for_xpath = '''//a[@title='next']'''
     config.request_timeout = 2
+    config.attempt_multi_page = True
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
     assert len(result) == core.DEFAULT_MAX_PAGES
 
 
+@pytest.mark.slow
 @pytest.mark.selenium
 def test_selenium_chrome_context_manager_good_scrape():
     url_list = [common.URL_SINGLE_PAGE_JS, common.URL_SINGLE_PAGE_NO_JS]
@@ -95,6 +100,7 @@ def test_selenium_chrome_context_manager_good_scrape():
             javascript = url_tup[1]
 
             config = core.ScrapeConfig(url)
+            config.wait_for_xpath = '/html'
             result = scraper_selenium.SeleniumChromeScraper(config, browser=chrome_session).scrape()
 
             page = result._scrape_pages[0].html
@@ -141,6 +147,7 @@ def test_selenium_scrape_timeout():
     assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
 
 
+@pytest.mark.slow
 @pytest.mark.selenium
 def test_selenium_limit_pages():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_NO_JS_START_GOOD)

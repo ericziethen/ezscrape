@@ -67,7 +67,10 @@ class RequestsHtmlScraper(core.Scraper):
                         F'HTTP Error: {resp.status_code} - '
                         F'{http.HTTPStatus(resp.status_code).phrase}')
 
-            if count > self.config.max_pages:
+                next_url = resp.html.next()
+                resp.close()
+
+            if count >= self.config.max_pages:
                 logger.debug(F'Paging limit of {self.config.max_pages} '
                             'reached, stop scraping')
                 break
@@ -76,13 +79,12 @@ class RequestsHtmlScraper(core.Scraper):
                 logger.debug((F'Multipage is not set, skip after first page'))
                 break
 
-            next_url = resp.html.next()
 
         return result
 
     @classmethod
     def _validate_config(cls, config: core.ScrapeConfig) -> None:
         """Verify the config can be scraped by requests-html."""
-        if config.wait_for_xpath is not None:
+        if config.wait_for_xpath:
             raise exceptions.ScrapeConfigError(
                 "No Suport for Next pages via Xpath")

@@ -4,6 +4,7 @@
 
 import enum
 import logging
+import sys
 
 from typing import Iterator, List
 
@@ -33,6 +34,9 @@ class ScrapeConfig():
 
     def __init__(self, url: str):
         """Initialize a default scrape config with the given url."""
+        # TODO - CHeck if can Simplify some parameters
+        # TODO - it should be clear how to configure
+        # TODO - Maybe Multipage, Javascript & xpath should be part of constructor???
         self.url = url
         self.request_timeout = DEFAULT_REQUEST_TIMEOUT
         self.proxy_server = None
