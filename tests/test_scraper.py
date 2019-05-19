@@ -111,7 +111,7 @@ SELENIUM_CHROME_GOOD_URLS = [
 def test_selenium_chrome_good_scrape(url, javascript, next_button_xpath, page_count, expected_page_count, start_page_num):
     config = scraper.ScrapeConfig(url)
     config.javascript = javascript
-    config.next_page_button_xpath = next_button_xpath
+    config.wait_for_xpath = next_button_xpath
 
     config.request_timeout = 2
 
@@ -148,7 +148,7 @@ def test_selenium_chrome_good_scrape(url, javascript, next_button_xpath, page_co
 @pytest.mark.slow
 def test_selenium_chrome_good_scrape_max_next_page_reached():
     config = scraper.ScrapeConfig(URL_MULTI_PAGE_JS_STATIC_LINKS_01)
-    config.next_page_button_xpath = '''//a[@title='next']'''
+    config.wait_for_xpath = '''//a[@title='next']'''
     config.request_timeout = 2
     result = scraper._scrape_url_selenium_chrome(config)
     assert len(result) == scraper.DEFAULT_MAX_PAGES
@@ -168,7 +168,7 @@ def test_selenium_chrome_context_manager_good_scrape():
 
             config = scraper.ScrapeConfig(url)
             config.javascript = javascript
-            config.next_page_button_xpath = next_button_xpath
+            config.wait_for_xpath = next_button_xpath
 
             config.max_pages = 6
             config.request_timeout = 2

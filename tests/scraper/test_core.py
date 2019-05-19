@@ -15,7 +15,7 @@ def test_scrape_config_default_values_set():
     assert config.next_page_timeout == core.DEFAULT_NEXT_PAGE_TIMEOUT
     assert config.proxy_server is None
     assert config.useragent is None
-    assert config.next_page_button_xpath is None
+    assert not config.wait_for_xpath
     assert not config.javascript
     assert not config.attempt_multi_page
 

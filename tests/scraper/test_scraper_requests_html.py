@@ -19,7 +19,7 @@ def test_requests_html_scraper_valid_config():
 
 def test_requests_html_scraper_invalid_config():
     config = core.ScrapeConfig('url')
-    config.next_page_button_xpath = 'xpath'
+    config.wait_for_xpath = 'xpath'
 
     # Failed if We check the Config Directly
     with pytest.raises(exceptions.ScrapeConfigError):

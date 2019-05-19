@@ -7,7 +7,7 @@ import datetime
 import logging
 import os
 
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException, NoSuchElementException
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -64,16 +64,27 @@ class SeleniumChromeScraper(core.Scraper):
                 result = self._scrape_with_browser(browser)
         return result
 
+    @classmethod
+    def _validate_config(cls, config: core.ScrapeConfig) -> None:
+        """Verify the config can be scraped by requests."""
+        if not config.wait_for_xpath:
+            raise exceptions.ScrapeConfigError(
+                'Selenium needs and Xpath Element Specified')
 
     def _scrape_with_browser(self, browser=None) -> core.ScrapeResult:
         """Scrape using Selenium with Chrome."""
         # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
-        
         result = core.ScrapeResult(self.config.url)
-        xpath_bttn = self.config.next_page_button_xpath
-        if xpath_bttn:
-            count = 0
+        multi_page = self.config.attempt_multi_page
+        xpath_bttn = self.config.wait_for_xpath
+        count = 0
+
+        try:
             r = browser.get(self.config.url)
+        except WebDriverException as error:
+            result.status = core.ScrapeStatus.ERROR
+            result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
+        else:
             while True:
                 count += 1
                 # SOME PAGE LOAD INFO AND TIPS if there are issues
@@ -81,25 +92,31 @@ class SeleniumChromeScraper(core.Scraper):
 
                 try:
                     time = datetime.datetime.now()
-                    element = WebDriverWait(
-                        browser, self.config.request_timeout).until(
-                            EC.element_to_be_clickable((By.XPATH, xpath_bttn)))
+                    if multi_page:
+                        element = WebDriverWait(
+                            browser, self.config.request_timeout).until(
+                                EC.element_to_be_clickable((By.XPATH, xpath_bttn)))
+                    else:
+                        element = WebDriverWait(
+                            browser, self.config.request_timeout).until(
+                                EC.presence_of_element_located((By.XPATH, xpath_bttn)))
                 except TimeoutException as error:
                     result.status = core.ScrapeStatus.TIMEOUT
                     # TODO - Maybe this should be an error and success state for each sub page
                     #result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
                     timediff = datetime.datetime.now() - time
                     scrape_time = (timediff.total_seconds() * 1000 +
-                                   timediff.microseconds / 1000)
+                                timediff.microseconds / 1000)
                     result.add_scrape_page(browser.page_source,
-                                           scrape_time=scrape_time,
-                                           status=core.ScrapeStatus.TIMEOUT)
+                                            scrape_time=scrape_time,
+                                            status=core.ScrapeStatus.TIMEOUT)
+                    result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
                     break
                 else:
                     result.status = core.ScrapeStatus.SUCCESS
                     timediff = datetime.datetime.now() - time
                     scrape_time = (timediff.total_seconds() * 1000 +
-                                   timediff.microseconds / 1000)
+                                    timediff.microseconds / 1000)
                     result.add_scrape_page(browser.page_source,
                                         scrape_time=scrape_time,
                                         status=core.ScrapeStatus.SUCCESS)
@@ -108,19 +125,11 @@ class SeleniumChromeScraper(core.Scraper):
                         logger.debug(F'Paging limit of {self.config.max_pages} reached, stop scraping')
                         break
 
-                    # Click the next Button
-                    element.click()
-        else:
-            result.status = core.ScrapeStatus.SUCCESS
-            time = datetime.datetime.now()
-            # TODO - If Javascript Page need to Wait, or Wait by default a bit longer
-            # TODO - SELENIUM might not need to know if it's javascript and just use a default wait time
-            # TODO - We might need an implicit wait here
-            r = browser.get(self.config.url)
-            timediff = datetime.datetime.now() - time
-            scrape_time = (timediff.total_seconds() * 1000 +
-                           timediff.microseconds / 1000)
-            result.add_scrape_page(browser.page_source,
-                                scrape_time=scrape_time,
-                                status=core.ScrapeStatus.SUCCESS)
+                    if multi_page:
+                        # Click the next Button
+                        element.click()
+                    else:
+                        break
+
         return result
+

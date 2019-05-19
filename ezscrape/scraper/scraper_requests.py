@@ -52,6 +52,6 @@ class RequestsScraper(core.Scraper):
             raise exceptions.ScrapeConfigError("No Support for Javascript")
 
         if (config.attempt_multi_page or
-                (config.next_page_button_xpath is not None)):
+                (config.wait_for_xpath is not None)):
             raise exceptions.ScrapeConfigError(
                 "No Support for Multipages, check fields")

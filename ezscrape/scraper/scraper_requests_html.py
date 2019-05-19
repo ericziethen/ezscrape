@@ -83,6 +83,6 @@ class RequestsHtmlScraper(core.Scraper):
     @classmethod
     def _validate_config(cls, config: core.ScrapeConfig) -> None:
         """Verify the config can be scraped by requests-html."""
-        if config.next_page_button_xpath is not None:
+        if config.wait_for_xpath is not None:
             raise exceptions.ScrapeConfigError(
                 "No Suport for Next pages via Xpath")
