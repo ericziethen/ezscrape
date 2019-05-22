@@ -21,9 +21,22 @@ class RequestsScraper(core.Scraper):
         """Scrape using Requests."""
         result = core.ScrapeResult(self.config.url)
         time = datetime.datetime.now()
+        headers = {}
+        if self.config.useragent:
+            headers['User-Agent'] = self.config.useragent
+        else:
+            headers['User-Agent'] = core.generic_useragent()
+
+        proxies = {}
+        # TODO - Need to Specify Both Possible Proxies
+        if self.config.proxy_server:
+            proxies = {'http': self.config.proxy_server,
+                       'https': self.config.proxy_server}
         try:
             resp = requests.request('get', self.config.url,
-                                    timeout=self.config.request_timeout)
+                                    timeout=self.config.request_timeout,
+                                    proxies=proxies,
+                                    headers=headers)
         except requests.exceptions.Timeout as error:
             result.status = core.ScrapeStatus.TIMEOUT
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
@@ -31,6 +44,7 @@ class RequestsScraper(core.Scraper):
             result.status = core.ScrapeStatus.ERROR
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
         else:
+            result._raw_response = resp
             if resp.status_code == 200:
                 result.status = core.ScrapeStatus.SUCCESS
                 timediff = datetime.datetime.now() - time

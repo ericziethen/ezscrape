@@ -1,7 +1,8 @@
+import pytest
 
-'''
-# TODO
-!!! DEFINE TESTS, CHECK NEW ONES AND CHECK EXISTING
-!!! IMPORT COMMON TEST DATA AND CONSTANTS IF NEEDED
-!!! DEFINE PYTEST MARKERS AND DOCUMENT IN PYTEST.INI
-'''
+import scraper.core as core
+import scraper.exceptions as exceptions
+import tests.common as common
+
+
+

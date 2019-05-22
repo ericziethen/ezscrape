@@ -95,3 +95,33 @@ def test_requests_scraper_scrape_timeout():
     assert result.error_msg is not None
     assert not result
     assert result.request_time_ms < (config.request_timeout + 0.5) * 1000  # Account for function overhead
+
+
+#TODO - Proxy List should probably come from Env Variables for testing
+
+PROXY_LIST = [
+    (common.URL_WHATS_MY_IP_HTTPS, 'http', '185.34.52.82', '80'),
+    (common.URL_WHATS_MY_IP_HTTPS, 'https', '91.208.39.70', '8080'),
+    (common.URL_WHATS_MY_IP_HTTP, 'http', '185.34.52.82', '80'),
+    (common.URL_WHATS_MY_IP_HTTP, 'https', '91.208.39.70', '8080'),
+
+]
+@pytest.mark.eric
+@pytest.mark.requests
+@pytest.mark.parametrize('url, protocol, proxy_ip, proxy_port', PROXY_LIST)
+def test_proxies(url, protocol, proxy_ip, proxy_port):
+    config = core.ScrapeConfig(url)
+    config.proxy_server = F'{protocol}://{proxy_ip}:{proxy_port}'
+    scraper = scraper_requests.RequestsScraper(config)
+    result = scraper.scrape()
+
+    print('ERROR', result.error_msg)
+    print('RAW', result._raw_response.url)
+
+    assert result
+    page = result._scrape_pages[0]
+    print('HTML', page.html)
+
+    html_ip = common.whatsmyip_ip_from_html(url, page.html)
+    print('foundIP:', html_ip)
+    assert html_ip == proxy_ip

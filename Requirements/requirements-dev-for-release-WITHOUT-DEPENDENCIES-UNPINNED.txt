@@ -1,4 +1,7 @@
 
+# parsing
+bs4
+
 # Network Related
 requests
 requests-html

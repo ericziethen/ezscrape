@@ -8,6 +8,7 @@ import sys
 
 from typing import Iterator, List
 
+import fake_useragent
 import scraper.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -86,6 +87,9 @@ class ScrapeResult():
         self.status: ScrapeStatus = ScrapeStatus.UNKNOWN
         self.error_msg = ''
 
+        self._raw_response = None
+
+
     @property
     def request_time_ms(self) -> float:
         """Property to calculate the combined request time."""
@@ -155,3 +159,8 @@ class Scraper():
         # pylint: disable=attribute-defined-outside-init
         self._config = new_config
         # pylint: enable=attribute-defined-outside-init
+
+
+def generic_useragent():
+    """Generate a generic user agent."""
+    return fake_useragent.UserAgent().chrome
