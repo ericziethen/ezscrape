@@ -34,6 +34,25 @@ class RequestsHtmlScraper(core.Scraper):
 
         next_url = self.config.url
         count = 0
+
+        # HEADER AND STUFF SHOULD COME FROM SEPARATE FUNCTION AND STORED INTERNALLY
+        headers = {}
+        if self.config.useragent:
+            headers['User-Agent'] = self.config.useragent
+        else:
+            headers['User-Agent'] = core.generic_useragent()
+
+        # TODO - Decide if needed for Proxy Testing, can store in self
+        #hooks={'response': self._get_caller_ip}
+
+        # TODO - Need to Specify Both Possible Proxies
+        # TODO - SPECIFY 1 or 2 PROXIES HERE???
+        proxies = {}
+        if self.config.proxy_http:
+            proxies['http'] = self.config.proxy_http
+        if self.config.proxy_https:
+            proxies['http'] = self.config.proxy_https
+
         while next_url is not None:
             logger.debug(F'Processing Url: "{next_url}"')
             count += 1
@@ -43,7 +62,12 @@ class RequestsHtmlScraper(core.Scraper):
             time = datetime.datetime.now()
             try:
                 resp = session.get(
-                    next_url, timeout=self.config.request_timeout)
+                    next_url, timeout=self.config.request_timeout,
+                                    proxies=proxies,
+                                    headers=headers,
+                                    stream=True,
+                                    #hooks=hooks,
+                                    verify=False)
             except requests.exceptions.Timeout as error:
                 result.status = core.ScrapeStatus.TIMEOUT
                 result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'

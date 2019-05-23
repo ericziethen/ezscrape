@@ -13,7 +13,8 @@ def test_scrape_config_default_values_set():
     assert config.javascript_wait == core.DEFAULT_JAVASCRIPT_WAIT
     assert config.max_pages == core.DEFAULT_MAX_PAGES
     assert config.next_page_timeout == core.DEFAULT_NEXT_PAGE_TIMEOUT
-    assert config.proxy_server is None
+    assert not config.proxy_http
+    assert not config.proxy_https
     assert config.useragent is None
     assert not config.wait_for_xpath
     assert not config.javascript

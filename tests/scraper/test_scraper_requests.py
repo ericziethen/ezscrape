@@ -96,9 +96,9 @@ def test_requests_scraper_scrape_timeout():
     assert not result
     assert result.request_time_ms < (config.request_timeout + 0.5) * 1000  # Account for function overhead
 
-
+#TODO - ADD SOME PROXY TESTS
 #TODO - Proxy List should probably come from Env Variables for testing
-
+'''
 PROXY_LIST = [
     (common.URL_WHATS_MY_IP_HTTPS, 'http', '185.34.52.82', '80'),
     (common.URL_WHATS_MY_IP_HTTPS, 'https', '91.208.39.70', '8080'),
@@ -125,3 +125,4 @@ def test_proxies(url, protocol, proxy_ip, proxy_port):
     html_ip = common.whatsmyip_ip_from_html(url, page.html)
     print('foundIP:', html_ip)
     assert html_ip == proxy_ip
+'''

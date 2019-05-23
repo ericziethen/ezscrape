@@ -118,3 +118,5 @@ def test_requests_html_limit_pages():
     result = scraper_requests_html.RequestsHtmlScraper(config).scrape()
 
     assert len(result) == config.max_pages
+
+#TODO - ADD SOME PROXY TESTS

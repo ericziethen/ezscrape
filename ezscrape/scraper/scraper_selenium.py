@@ -26,7 +26,7 @@ class SeleniumSetupError(Exception):
 
 
 @contextlib.contextmanager
-def SeleniumChromeSession():
+def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
     """Context Manager wrapper for a Selenium Chrome Session."""
     # TODO - Support Chrome Portable Overwrite
         # String chromePath = "M:/my/googlechromeporatble.exe path"; 
@@ -39,8 +39,22 @@ def SeleniumChromeSession():
         raise SeleniumSetupError((F'Webdriver not found, set path as env '
                                   F'Variable: "{CHROME_WEBDRIVER_ENV_VAR}"'))
 
+    proxy = ''
+    if config is not None:
+        if config.url.startswith('https'):
+            proxy = config.proxy_https
+        elif config.url.startswith('http'):
+            proxy = config.proxy_http
+
+    # TODO - Split the URL to get the correct schema
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--headless')
+    chrome_options.add_argument(F'user-agent={core.generic_useragent()}')
+    if proxy:
+        chrome_options.add_argument(F'--proxy-server={proxy}')
+
+    # TODO - SELENIUM Might have some issue with Proxy Verification
+    # See https://stackoverflow.com/questions/12848327/how-to-run-selenium-web-driver-behind-a-proxy-server-which-needs-authentication/35293284#35293284
 
     with webdriver.Chrome(
             chrome_options=chrome_options,

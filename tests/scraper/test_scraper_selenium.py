@@ -158,3 +158,6 @@ def test_selenium_limit_pages():
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
     assert len(result) == config.max_pages
+
+
+#TODO - ADD SOME PROXY TESTS

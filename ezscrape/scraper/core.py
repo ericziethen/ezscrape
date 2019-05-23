@@ -28,6 +28,7 @@ class ScrapeStatus(enum.Enum):
     TIMEOUT = 'Timeout'
     SUCCESS = 'Success'
     ERROR = 'Error'
+    PROXY_ERROR = 'Proxy Error'
 
 
 class ScrapeConfig():
@@ -40,7 +41,8 @@ class ScrapeConfig():
         # TODO - Maybe Multipage, Javascript & xpath should be part of constructor???
         self.url = url
         self.request_timeout = DEFAULT_REQUEST_TIMEOUT
-        self.proxy_server = None
+        self.proxy_http = ''
+        self.proxy_https = ''
         self.javascript = False
         self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT
         self.useragent = None
