@@ -15,9 +15,12 @@ set PROJ_MAIN_DIR=%~dp0..
 
 pushd %PROJ_MAIN_DIR%
 
-set PACKAGE_ROOT=ezproxytools
+set PACKAGE_ROOT=ezscrape
 
 set PYTHONPATH=%PYTHONPATH%;%PACKAGE_ROOT%
+
+rem Set Selenium Test Driver Path
+set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\74.0.3729.6\win32\chromedriver.exe
 
 rem Test directories are specified in Pytest.ini
 pytest --cov=%PACKAGE_ROOT%

@@ -18,7 +18,7 @@ set Sec=%DateTime:~12,2%
 set datetimef=%Yr%.%Mon%.%Day%_%Hr%-%Min%-%Sec%
 
 !!! CONFIGURE SOURCE ROOT HERE !!!
-set SOURCE_ROOT=ezproxytools
+set SOURCE_ROOT=ezscrape
 
 set PYTHON_PROG=#PYTHON_PROG_NAME#
 set ARGS=
