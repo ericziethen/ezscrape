@@ -11,3 +11,6 @@ pytest-cov
 
 # Profiling
 pyinstrument
+
+# Packaging
+wheel
