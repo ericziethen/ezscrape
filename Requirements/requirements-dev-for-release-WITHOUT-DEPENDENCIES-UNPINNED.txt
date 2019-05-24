@@ -1,6 +1,6 @@
 
 # parsing
-bs4
+beautifulsoup4
 
 # Network Related
 requests
