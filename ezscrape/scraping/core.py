@@ -9,7 +9,7 @@ import sys
 from typing import Iterator, List
 
 import fake_useragent
-import scraper.exceptions as exceptions
+import scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 

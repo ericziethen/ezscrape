@@ -1,7 +1,7 @@
 import pytest
 
-import scraper.core as core
-import scraper.exceptions as exceptions
+import scraping.core as core
+import scraping.exceptions as exceptions
 
 
 def test_scrape_config_default_values_set():
