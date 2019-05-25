@@ -1,10 +1,10 @@
 import pytest
 
-import scraper.core as core
-import scraper.exceptions as exceptions
+import scraping.core as core
+import scraping.exceptions as exceptions
 import tests.common as common
 
-import ezscrape.scraper.scraper_selenium as scraper_selenium
+import ezscrape.scraping.scraper_selenium as scraper_selenium
 
 
 def test_selenium_scraper_valid_config():

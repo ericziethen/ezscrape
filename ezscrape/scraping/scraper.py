@@ -5,12 +5,12 @@
 import ipaddress
 import logging
 
-import scraper.scraper_requests
-import scraper.scraper_requests_html
-import scraper.scraper_selenium
+import scraping.scraper_requests
+import scraping.scraper_requests_html
+import scraping.scraper_selenium
 
 
-import scraper.core as core
+import scraping.core as core
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -54,7 +54,7 @@ def check_url(url: str, *, local_only: bool) -> bool:
         raise ValueError('Url is not a local address')
 
     config = core.ScrapeConfig(url)
-    result = scraper.scraper_requests.scrape_url_requests(config)
+    result = scraping.scraper_requests.scrape_url_requests(config)
 
     # TODO - There mist be a better way if the request succeeded than 
     # TODO - accessing the underlying data directly

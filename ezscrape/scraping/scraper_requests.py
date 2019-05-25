@@ -8,8 +8,8 @@ import logging
 
 import requests
 
-import scraper.core as core
-import scraper.exceptions as exceptions
+import scraping.core as core
+import scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 

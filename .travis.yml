@@ -1,0 +1,21 @@
+
+language: python
+
+matrix:
+  include:
+    - os: windows
+      language: sh
+      python: "3.7"
+      before_install:
+        - choco install python3
+        - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
+        - python -m pip install --upgrade pip
+
+install:
+    - pip install --upgrade pip setuptools
+    - pip install -r Requirements\requirements-dev-for-release.txt
+    - pip intall  -r Requirements\requirements-dev-local.txt
+    - pip install .
+
+script:
+  - dev/run_tests.bat

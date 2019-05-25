@@ -1,10 +1,10 @@
 import pytest
 
-import scraper.core as core
-import scraper.exceptions as exceptions
+import scraping.core as core
+import scraping.exceptions as exceptions
 import tests.common as common
 
-import ezscrape.scraper.scraper_requests_html as scraper_requests_html
+import ezscrape.scraping.scraper_requests_html as scraper_requests_html
 
 
 def test_requests_html_scraper_valid_config():
