@@ -15,7 +15,9 @@ install:
     - pip install --upgrade pip setuptools
     - pip install -r Requirements/requirements-dev-for-release.txt
     - pip install -r Requirements/requirements-dev-local.txt
-    - pip install .
 
 script:
   - dev/run_tests.bat
+
+after_success:
+  - codecov
