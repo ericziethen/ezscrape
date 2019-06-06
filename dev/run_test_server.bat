@@ -2,27 +2,35 @@
 
 setlocal
 
-rem This selfwrapper calls itself again to avoid closing the command window when exiting
-IF "%selfWrapped%"=="" (
-  REM this is necessary so that we can use "exit" to terminate the batch file,
-  REM and all subroutines, but not the original cmd.exe
-  SET selfWrapped=true
-  %ComSpec% /s /c ""%~0" %*"
-  GOTO :EOF
-)
+rem DON'T CHANGE, ALSO USED FOR KILLING
+set SERVER_WINDOW_NAME=python_test_server
 
 set PROJ_MAIN_DIR=%~dp0..
-
 set TEST_SERVER_DIR=%PROJ_MAIN_DIR%\tests\TestServerContent
 
-python -m http.server --directory "%TEST_SERVER_DIR%" --bind localhost 8000
+rem --directory only available since Python 3.7
+set COMMAND=python -m http.server --bind localhost 8000
 
-goto exit_ok
+pushd "%TEST_SERVER_DIR%"
 
-:exit_error
+if [%1] == [] (
+    echo No Argument Found, run attached
+    goto run_attached
+) else (
+    echo Argument Found, run detached
+    goto run_detached
+)
+
+:run_attached
+%COMMAND%
+goto end
+
+:run_detached
+start "%SERVER_WINDOW_NAME%" %COMMAND%
+echo Command: 'tasklist /V /FI "imagename eq python.exe"'
+tasklist /V /FI "imagename eq python.exe"
+goto end
+
+:end
+popd
 endlocal
-exit /B 1
-
-:exit_ok
-endlocal
-exit /B 0

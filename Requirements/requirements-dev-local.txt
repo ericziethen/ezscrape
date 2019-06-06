@@ -9,6 +9,7 @@ mypy
 pytest
 pytest-cov
 codecov
+safety
 
 # Profiling
 pyinstrument
