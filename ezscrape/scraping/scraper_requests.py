@@ -61,6 +61,7 @@ class RequestsScraper(core.Scraper):
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
         else:
             result._raw_response = resp
+            # TODO - Check Status with response.raise_for_status()
             if resp.status_code == 200:
                 result.status = core.ScrapeStatus.SUCCESS
                 timediff = datetime.datetime.now() - time
