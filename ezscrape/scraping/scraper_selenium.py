@@ -106,6 +106,10 @@ class SeleniumChromeScraper(core.Scraper):
 
                 try:
                     time = datetime.datetime.now()
+                    # TODO - Can't remember why we are having 2 different ways
+                    # TODO - Try to avoid using multi_page, but is there a case for both?
+                    # TODO - Maybe have a Next Button Xpath and a Wait For Xpath?
+                    # TODO - How to wait for both if we have both?
                     if multi_page:
                         element = WebDriverWait(
                             browser, self.config.request_timeout).until(

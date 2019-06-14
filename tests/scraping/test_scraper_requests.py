@@ -106,7 +106,7 @@ PROXY_LIST = [
     (common.URL_WHATS_MY_IP_HTTP, 'https', '91.208.39.70', '8080'),
 
 ]
-@pytest.mark.eric
+@pytest.mark.webtest
 @pytest.mark.requests
 @pytest.mark.parametrize('url, protocol, proxy_ip, proxy_port', PROXY_LIST)
 def test_proxies(url, protocol, proxy_ip, proxy_port):
@@ -119,10 +119,14 @@ def test_proxies(url, protocol, proxy_ip, proxy_port):
     print('RAW', result._raw_response.url)
 
     assert result
+
+    assert result.caller_ip == proxy_ip
+
     page = result._scrape_pages[0]
     print('HTML', page.html)
 
     html_ip = common.whatsmyip_ip_from_html(url, page.html)
     print('foundIP:', html_ip)
     assert html_ip == proxy_ip
+
 '''

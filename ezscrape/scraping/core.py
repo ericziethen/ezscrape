@@ -83,14 +83,12 @@ class ScrapeResult():
         self._idx = 0
 
         self.url = url
+        self.caller_ip = None
 
         # TODO - Status should be (_scrape_pages > 0) and (not error_msg)
         # TODO - Or some other logic
         self.status: ScrapeStatus = ScrapeStatus.UNKNOWN
         self.error_msg = ''
-
-        self._raw_response = None
-
 
     @property
     def request_time_ms(self) -> float:

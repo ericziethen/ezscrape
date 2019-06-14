@@ -5,6 +5,7 @@
 import datetime
 import http
 import logging
+import socket
 
 import requests
 
@@ -13,9 +14,13 @@ import scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
-
 class RequestsScraper(core.Scraper):
     """Implement the Scraper using requests."""
+
+    def __init__(self, config: core.ScrapeConfig):
+        """Initialize the Request Scraper."""
+        super().__init__(config)
+        self._caller_ip = None
 
     def scrape(self) -> core.ScrapeResult:
         """Scrape using Requests."""
@@ -32,8 +37,7 @@ class RequestsScraper(core.Scraper):
         else:
             headers['User-Agent'] = core.generic_useragent()
 
-        # TODO - Decide if needed for Proxy Testing, can store in self
-        #hooks={'response': self._get_caller_ip}
+        hooks={'response': self._get_caller_ip}
 
         # TODO - Need to Specify Both Possible Proxies
         # TODO - SPECIFY 1 or 2 PROXIES HERE???
@@ -47,8 +51,7 @@ class RequestsScraper(core.Scraper):
                                     timeout=self.config.request_timeout,
                                     proxies=proxies,
                                     headers=headers,
-                                    stream=True,
-                                    #hooks=hooks,
+                                    hooks=hooks,
                                     verify=False)
         except (requests.exceptions.ProxyError, requests.exceptions.SSLError) as error:
             result.status = core.ScrapeStatus.PROXY_ERROR
@@ -60,22 +63,38 @@ class RequestsScraper(core.Scraper):
             result.status = core.ScrapeStatus.ERROR
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
         else:
-            result._raw_response = resp
-            # TODO - Check Status with response.raise_for_status()
-            if resp.status_code == 200:
+            result.caller_ip = self._caller_ip
+
+            # Decide if Success or Not
+            try:
+                resp.raise_for_status()
+            except requests.exceptions.HTTPError as error:
+                result.status = core.ScrapeStatus.ERROR
+                result.error_msg = (
+                    F'HTTP Error: {resp.status_code} - '
+                    F'{http.HTTPStatus(resp.status_code).phrase}')
+            else:
                 result.status = core.ScrapeStatus.SUCCESS
                 timediff = datetime.datetime.now() - time
                 scrape_time = (timediff.total_seconds() * 1000 +
                                timediff.microseconds / 1000)
                 result.add_scrape_page(resp.text, scrape_time=scrape_time,
                                        status=core.ScrapeStatus.SUCCESS)
-            else:
-                result.status = core.ScrapeStatus.ERROR
-                result.error_msg = (
-                    F'HTTP Error: {resp.status_code} - '
-                    F'{http.HTTPStatus(resp.status_code).phrase}')
+
             resp.close()
         return result
+
+    def _get_caller_ip(self, r, *args, **kwargs):
+        """Get the caller IP from the raw socket."""
+        sock = socket.fromfd(r.raw.fileno(), socket.AF_INET, socket.SOCK_STREAM)
+        print('SOCKET:', sock)
+        self._caller_ip = sock.getsockname()[0]
+
+    # TODO - Generalize to be able to reuse in requests-html easily
+    def _make_raw_request(self):
+        """Make the Raw Request."""
+    def _parse_raw_response(self):
+        """Parse the Raw Response."""
 
     @classmethod
     def _validate_config(cls, config: core.ScrapeConfig) -> None:
@@ -86,14 +105,3 @@ class RequestsScraper(core.Scraper):
         if config.attempt_multi_page or config.wait_for_xpath:
             raise exceptions.ScrapeConfigError(
                 "No Support for Multipages, check fields")
-
-    '''
-    # TODO - Decide if needed for Proxy Testing, can store in self
-    @classmethod
-    def _get_caller_ip(cls, r, *args, **kwargs):
-        s = socket.fromfd(r.raw.fileno(), socket.AF_INET, socket.SOCK_STREAM)
-        global socket_peer
-        socket_peer = s.getpeername()
-        global socket_name
-        socket_name = s.getsockname()
-    '''
