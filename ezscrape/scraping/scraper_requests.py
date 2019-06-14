@@ -2,6 +2,20 @@
 
 """Module to provie Scrape functionality using the requests module."""
 
+# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# 
+# Since the only real difference between Requests and Requests-Html is that it can Handle
+# Javascript (at the cost of having to download chromium the first time) maybe
+# it's better to not use this and use selenium for that purpose
+# Selenium will require a Wait Element but that should be ok
+# OR OR OR OR OR OR OR OR OR OR
+# Merge both and only use Requests HTML but with added Javascript Support
+# if no JS specified it will work as normal requests
+
 import datetime
 import http
 import logging
@@ -26,33 +40,33 @@ class RequestsScraper(core.Scraper):
         """Scrape using Requests."""
         result = core.ScrapeResult(self.config.url)
 
-        # TODO - THe Time can be read from the Request Response
-        time = datetime.datetime.now()
+        # Prepare the Request Data
+        headers = {'User-Agent': core.generic_useragent()}
+        proxies = {}
+        hooks = {'response': self._get_caller_ip}
 
-        # HEADER AND STUFF SHOULD COME FROM SEPARATE FUNCTION AND STORED INTERNALLY
-        headers = {}
         # TODO - Check fake-useragent, can specify a list for rotation
         if self.config.useragent:
             headers['User-Agent'] = self.config.useragent
-        else:
-            headers['User-Agent'] = core.generic_useragent()
-
-        hooks={'response': self._get_caller_ip}
 
         # TODO - Need to Specify Both Possible Proxies
         # TODO - SPECIFY 1 or 2 PROXIES HERE???
-        proxies = {}
         if self.config.proxy_http:
             proxies['http'] = self.config.proxy_http
         if self.config.proxy_https:
             proxies['http'] = self.config.proxy_https
+
+        # Make the Request
+        time = datetime.datetime.now()
         try:
-            resp = requests.request('get', self.config.url,
+            resp = requests.request('get',
+                                    self.config.url,
                                     timeout=self.config.request_timeout,
                                     proxies=proxies,
                                     headers=headers,
                                     hooks=hooks,
                                     verify=False)
+
         except (requests.exceptions.ProxyError, requests.exceptions.SSLError) as error:
             result.status = core.ScrapeStatus.PROXY_ERROR
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
@@ -89,12 +103,6 @@ class RequestsScraper(core.Scraper):
         sock = socket.fromfd(r.raw.fileno(), socket.AF_INET, socket.SOCK_STREAM)
         print('SOCKET:', sock)
         self._caller_ip = sock.getsockname()[0]
-
-    # TODO - Generalize to be able to reuse in requests-html easily
-    def _make_raw_request(self):
-        """Make the Raw Request."""
-    def _parse_raw_response(self):
-        """Parse the Raw Response."""
 
     @classmethod
     def _validate_config(cls, config: core.ScrapeConfig) -> None:
