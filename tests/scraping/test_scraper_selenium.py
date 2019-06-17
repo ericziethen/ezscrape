@@ -18,7 +18,7 @@ def test_selenium_scraper_valid_config():
     assert scraper is not None
 
 
-def test_requests_html_scraper_invalid_config():
+def test_selenium_scraper_invalid_config():
     config = core.ScrapeConfig('url')
 
     # Failed if We check the Config Directly

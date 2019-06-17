@@ -6,7 +6,6 @@ import ipaddress
 import logging
 
 import scraping.scraper_requests
-import scraping.scraper_requests_html
 import scraping.scraper_selenium
 
 

@@ -4,5 +4,4 @@ beautifulsoup4
 
 # Network Related
 requests
-requests-html
 selenium
