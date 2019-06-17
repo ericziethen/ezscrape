@@ -2,20 +2,6 @@
 
 """Module to provie Scrape functionality using the requests module."""
 
-# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# TODO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# 
-# Since the only real difference between Requests and Requests-Html is that it can Handle
-# Javascript (at the cost of having to download chromium the first time) maybe
-# it's better to not use this and use selenium for that purpose
-# Selenium will require a Wait Element but that should be ok
-# OR OR OR OR OR OR OR OR OR OR
-# Merge both and only use Requests HTML but with added Javascript Support
-# if no JS specified it will work as normal requests
-
 import datetime
 import http
 import logging
@@ -27,6 +13,7 @@ import scraping.core as core
 import scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
+
 
 class RequestsScraper(core.Scraper):
     """Implement the Scraper using requests."""
@@ -45,7 +32,6 @@ class RequestsScraper(core.Scraper):
         proxies = {}
         hooks = {'response': self._get_caller_ip}
 
-        # TODO - Check fake-useragent, can specify a list for rotation
         if self.config.useragent:
             headers['User-Agent'] = self.config.useragent
 
@@ -67,7 +53,8 @@ class RequestsScraper(core.Scraper):
                                     hooks=hooks,
                                     verify=False)
 
-        except (requests.exceptions.ProxyError, requests.exceptions.SSLError) as error:
+        except (requests.exceptions.ProxyError,
+                requests.exceptions.SSLError) as error:
             result.status = core.ScrapeStatus.PROXY_ERROR
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
         except requests.exceptions.Timeout as error:
@@ -98,9 +85,11 @@ class RequestsScraper(core.Scraper):
             resp.close()
         return result
 
-    def _get_caller_ip(self, r, *args, **kwargs):
+    def _get_caller_ip(self, response, *args, **kwargs) -> None:
         """Get the caller IP from the raw socket."""
-        sock = socket.fromfd(r.raw.fileno(), socket.AF_INET, socket.SOCK_STREAM)
+        # pylint: disable=unused-argument
+        sock = socket.fromfd(response.raw.fileno(), socket.AF_INET,
+                             socket.SOCK_STREAM)
         print('SOCKET:', sock)
         self._caller_ip = sock.getsockname()[0]
 

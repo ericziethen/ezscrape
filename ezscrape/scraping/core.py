@@ -161,6 +161,8 @@ class Scraper():
         # pylint: enable=attribute-defined-outside-init
 
 
-def generic_useragent():
+
+# TODO - Check fake-useragent, can specify a list for rotation
+def generic_useragent() -> str:
     """Generate a generic user agent."""
     return fake_useragent.UserAgent().chrome
