@@ -94,7 +94,7 @@ class RequestsScraper(core.Scraper):
         sock = socket.fromfd(response.raw.fileno(), socket.AF_INET,
                              socket.SOCK_STREAM)
         print('SOCKET:', sock)
-        self._caller_ip = sock.getsockname()[0]
+        self._caller_ip = sock.getpeername()[0]
 
     @classmethod
     def _validate_config(cls, config: core.ScrapeConfig) -> None:

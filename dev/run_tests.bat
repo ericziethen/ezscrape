@@ -12,7 +12,7 @@ rem To see how to loop through multiple Command Line Arguments: https://www.robv
 rem Disable Unwanted tests when run from Travis
 if "%1"=="travis-ci" (
     rem add testing exclusions for travis
-    rem set PYTEST_ADDOPTS=-m "(not ???)"
+    rem set PYTEST_ADDOPTS=-m "(not proxytest)"
     goto run_tests
 )
 

@@ -3,6 +3,9 @@
 """Module providing misc web related functionality."""
 
 import http
+import urllib.parse
+
+from collections import namedtuple
 
 import fake_useragent
 
@@ -21,3 +24,9 @@ def phrase_from_response_code(code: int) -> str:
     # pylint: enable=no-value-for-parameter
 
     return status_code.phrase
+
+def split_url(url: str):
+    """Split the url into it's components."""
+    url_split = namedtuple('url_split', ['scheme', 'hostname', 'port'])
+    result = urllib.parse.urlparse(url)
+    return url_split(result.scheme, result.hostname, result.port)

@@ -2,6 +2,7 @@ import pytest
 
 import scraping.core as core
 import scraping.exceptions as exceptions
+import scraping.web_lib as web_lib
 import tests.common as common
 
 import ezscrape.scraping.scraper_requests as scraper_requests
@@ -98,35 +99,45 @@ def test_requests_scraper_scrape_timeout():
 
 #TODO - ADD SOME PROXY TESTS
 #TODO - Proxy List should probably come from Env Variables for testing
-'''
+#'''
 PROXY_LIST = [
-    (common.URL_WHATS_MY_IP_HTTPS, 'http', '185.34.52.82', '80'),
-    (common.URL_WHATS_MY_IP_HTTPS, 'https', '91.208.39.70', '8080'),
-    (common.URL_WHATS_MY_IP_HTTP, 'http', '185.34.52.82', '80'),
-    (common.URL_WHATS_MY_IP_HTTP, 'https', '91.208.39.70', '8080'),
-
+    (common.URL_WHATS_MY_IP_HTTPS, 'http://91.208.39.70:8080', 'https://91.208.39.70:8080'),
+    (common.URL_WHATS_MY_IP_HTTP, 'http://91.208.39.70:8080', 'https://91.208.39.70:8080'),
+    (common.URL_WHATS_MY_IP_HTTPS, 'http://157.230.249.74:3128', 'https://157.230.249.74:3128'),
+    (common.URL_WHATS_MY_IP_HTTP, 'http://157.230.249.74:3128', 'https://157.230.249.74:3128'),
+    (common.URL_WHATS_MY_IP_HTTPS, 'http://104.248.79.41:3128', 'https://104.248.79.41:3128'),
+    (common.URL_WHATS_MY_IP_HTTP, 'http://104.248.79.41:3128', 'https://104.248.79.41:3128'),
+    (common.URL_WHATS_MY_IP_HTTPS, 'http://103.6.184.250:54674', 'https://103.6.184.250:54674'),
+    (common.URL_WHATS_MY_IP_HTTP, 'http://103.6.184.250:54674', 'https://103.6.184.250:54674')
 ]
+@pytest.mark.proxytest
 @pytest.mark.webtest
 @pytest.mark.requests
-@pytest.mark.parametrize('url, protocol, proxy_ip, proxy_port', PROXY_LIST)
-def test_proxies(url, protocol, proxy_ip, proxy_port):
+@pytest.mark.parametrize('url, http_proxy, https_proxy', PROXY_LIST)
+def test_proxies(url, http_proxy, https_proxy):
     config = core.ScrapeConfig(url)
-    config.proxy_server = F'{protocol}://{proxy_ip}:{proxy_port}'
+    config.proxy_http = http_proxy
+    config.proxy_https = https_proxy
     scraper = scraper_requests.RequestsScraper(config)
     result = scraper.scrape()
 
     print('ERROR', result.error_msg)
-    print('RAW', result._raw_response.url)
 
     assert result
 
-    assert result.caller_ip == proxy_ip
+    if url.startswith('http://'):
+        assert result.caller_ip == web_lib.split_url(http_proxy).hostname
+        proxy_ip = http_proxy
+    else:
+        assert result.caller_ip == web_lib.split_url(https_proxy).hostname
+        proxy_ip = https_proxy
 
+    '''
     page = result._scrape_pages[0]
     print('HTML', page.html)
 
     html_ip = common.whatsmyip_ip_from_html(url, page.html)
     print('foundIP:', html_ip)
     assert html_ip == proxy_ip
-
-'''
+    '''
+#'''
