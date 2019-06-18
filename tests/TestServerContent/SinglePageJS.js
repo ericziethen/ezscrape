@@ -1,6 +1,7 @@
 function loadContent(waitMs) {
     var a = document.createElement('p');
     var linkText = document.createTextNode("Waited " + waitMs + "ms for page to load");
+    a.id = 'wait-text'
     a.appendChild(linkText);
     document.body.appendChild(a);
 
