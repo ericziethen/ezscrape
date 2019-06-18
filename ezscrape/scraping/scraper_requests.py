@@ -29,7 +29,7 @@ class RequestsScraper(core.Scraper):
         result = core.ScrapeResult(self.config.url)
 
         # Prepare the Request Data
-        headers = {'User-Agent': web_lib.generic_useragent()}
+        headers = {'User-Agent': web_lib.random_useragent()}
         proxies = {}
         hooks = {'response': self._get_caller_ip}
 

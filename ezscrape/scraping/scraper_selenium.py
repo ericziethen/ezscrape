@@ -58,7 +58,7 @@ def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
     # TODO - Split the URL to get the correct schema
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--headless')
-    chrome_options.add_argument(F'user-agent={web_lib.generic_useragent()}')
+    chrome_options.add_argument(F'user-agent={web_lib.random_useragent()}')
     if proxy:
         chrome_options.add_argument(F'--proxy-server={proxy}')
 

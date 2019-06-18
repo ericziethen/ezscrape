@@ -10,10 +10,9 @@ from collections import namedtuple
 import fake_useragent
 
 
-# TODO - Check fake-useragent, can specify a list for rotation
-def generic_useragent() -> str:
+def random_useragent() -> str:
     """Generate a generic user agent."""
-    return fake_useragent.UserAgent().chrome
+    return fake_useragent.UserAgent().random
 
 
 def phrase_from_response_code(code: int) -> str:
@@ -24,6 +23,7 @@ def phrase_from_response_code(code: int) -> str:
     # pylint: enable=no-value-for-parameter
 
     return status_code.phrase
+
 
 def split_url(url: str):
     """Split the url into it's components."""
