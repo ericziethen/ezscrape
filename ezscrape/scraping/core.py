@@ -4,11 +4,9 @@
 
 import enum
 import logging
-import sys
 
 from typing import Iterator, List
 
-import fake_useragent
 import scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -159,10 +157,3 @@ class Scraper():
         # pylint: disable=attribute-defined-outside-init
         self._config = new_config
         # pylint: enable=attribute-defined-outside-init
-
-
-
-# TODO - Check fake-useragent, can specify a list for rotation
-def generic_useragent() -> str:
-    """Generate a generic user agent."""
-    return fake_useragent.UserAgent().chrome

@@ -15,6 +15,8 @@ if "%1"=="travis-ci" (
     rem set PYTEST_ADDOPTS=-m "(not ???)"
 )
 
+set CHROME_WEBDRIVER_PATH=C:\# Eric\# Personal Development\###ERIC_TEMP###\ez-scrape\ezscrape\webdriver\chromedriver\74.0.3729.6\win32\chromedriver.exe
+
 pytest --rootdir="%PROJ_MAIN_DIR%" --cov="%PACKAGE_ROOT%"
 set return_code=%errorlevel%
 if %return_code% equ 0 (

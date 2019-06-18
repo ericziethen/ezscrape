@@ -15,6 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 
 import scraping.core as core
 import scraping.exceptions as exceptions
+import scraping.web_lib as web_lib
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -34,6 +35,14 @@ def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
         #   System.setProperty("webdriver.chrome.driver",chromedriverpath);
     #chrome_exec_var=
 
+    # TODO - The Module will probably come with a default Chrome Webdriver
+    # TODO - IFFFFFF Different Versions work with different Versions of Chrome and
+    # TODO - then let the user overwrite it
+    # TODO - Otherwise User needs to setup both somehow
+    # TODO - ??? Config
+    # TODO - ??? Env Variable
+    # TODO - ??? Parameter
+    # TODO - 
     chrome_web_driver_path = os.environ.get(CHROME_WEBDRIVER_ENV_VAR)
     if chrome_web_driver_path is None:
         raise SeleniumSetupError((F'Webdriver not found, set path as env '
@@ -49,7 +58,7 @@ def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
     # TODO - Split the URL to get the correct schema
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--headless')
-    chrome_options.add_argument(F'user-agent={core.generic_useragent()}')
+    chrome_options.add_argument(F'user-agent={web_lib.generic_useragent()}')
     if proxy:
         chrome_options.add_argument(F'--proxy-server={proxy}')
 
@@ -81,6 +90,7 @@ class SeleniumChromeScraper(core.Scraper):
     @classmethod
     def _validate_config(cls, config: core.ScrapeConfig) -> None:
         """Verify the config can be scraped by requests."""
+        # TODO - THIS NEEDS REFACTORING, WE SHOULD SUPPORT EXPLICIT WAIT AS WELL
         if not config.wait_for_xpath:
             raise exceptions.ScrapeConfigError(
                 'Selenium needs and Xpath Element Specified')

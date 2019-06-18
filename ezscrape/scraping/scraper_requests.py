@@ -10,6 +10,7 @@ import socket
 import requests
 
 import scraping.core as core
+import scraping.web_lib as web_lib
 import scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -28,19 +29,19 @@ class RequestsScraper(core.Scraper):
         result = core.ScrapeResult(self.config.url)
 
         # Prepare the Request Data
-        headers = {'User-Agent': core.generic_useragent()}
+        headers = {'User-Agent': web_lib.generic_useragent()}
         proxies = {}
         hooks = {'response': self._get_caller_ip}
 
+        # Setup the user agent
         if self.config.useragent:
             headers['User-Agent'] = self.config.useragent
 
-        # TODO - Need to Specify Both Possible Proxies
-        # TODO - SPECIFY 1 or 2 PROXIES HERE???
+        # Setup the Proxy
         if self.config.proxy_http:
             proxies['http'] = self.config.proxy_http
         if self.config.proxy_https:
-            proxies['http'] = self.config.proxy_https
+            proxies['https'] = self.config.proxy_https
 
         # Make the Request
         time = datetime.datetime.now()
@@ -71,9 +72,10 @@ class RequestsScraper(core.Scraper):
                 resp.raise_for_status()
             except requests.exceptions.HTTPError as error:
                 result.status = core.ScrapeStatus.ERROR
+
                 result.error_msg = (
                     F'HTTP Error: {resp.status_code} - '
-                    F'{http.HTTPStatus(resp.status_code).phrase}')
+                    F'{web_lib.phrase_from_response_code(resp.status_code)}')
             else:
                 result.status = core.ScrapeStatus.SUCCESS
                 timediff = datetime.datetime.now() - time
@@ -85,7 +87,8 @@ class RequestsScraper(core.Scraper):
             resp.close()
         return result
 
-    def _get_caller_ip(self, response, *args, **kwargs) -> None:
+    def _get_caller_ip(self, response: requests.Response,  # type: ignore
+                       *args, **kwargs) -> None:
         """Get the caller IP from the raw socket."""
         # pylint: disable=unused-argument
         sock = socket.fromfd(response.raw.fileno(), socket.AF_INET,
