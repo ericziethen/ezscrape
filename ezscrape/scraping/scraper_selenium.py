@@ -104,7 +104,7 @@ class SeleniumChromeScraper(core.Scraper):
         count = 0
 
         try:
-            r = browser.get(self.config.url)
+            browser.get(self.config.url)
         except WebDriverException as error:
             result.status = core.ScrapeStatus.ERROR
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'

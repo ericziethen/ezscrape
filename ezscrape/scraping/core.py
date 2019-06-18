@@ -61,6 +61,8 @@ class ScrapeConfig():
             raise exceptions.ScrapeConfigError('Url cannot be blank')
         self._url = new_url  # pylint: disable=attribute-defined-outside-init
 
+    def __str__(self) -> str:
+        return str(self.__dict__)
 
 class ScrapePage():
     """Class to represent a single scraped page."""
@@ -129,11 +131,8 @@ class Scraper():
 
     def __init__(self, config: ScrapeConfig):
         """Initialize the Scrape Class."""
+        print(F'Scraper.__init__()')
         self.config: ScrapeConfig = config
-
-    def scrape(self) -> ScrapeResult:
-        """Scrape based on the set config."""
-        raise NotImplementedError
 
     @classmethod
     def _validate_config(cls, config: ScrapeConfig) -> None:
@@ -148,6 +147,7 @@ class Scraper():
 
     @config.setter
     def config(self, new_config: ScrapeConfig) -> None:
+        print(F'Scraper.@config.setter')
         # Check in setter because True for subclasses as well
         if new_config is None:
             raise ValueError("Config must be provided")
@@ -157,3 +157,10 @@ class Scraper():
         # pylint: disable=attribute-defined-outside-init
         self._config = new_config
         # pylint: enable=attribute-defined-outside-init
+
+    def scrape(self) -> ScrapeResult:
+        """Scrape based on the set config."""
+        raise NotImplementedError
+
+    def __str__(self) -> str:
+        return F'{type(self).__name__} for Url: {self.config.url}'

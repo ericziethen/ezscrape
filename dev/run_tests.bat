@@ -13,10 +13,18 @@ rem Disable Unwanted tests when run from Travis
 if "%1"=="travis-ci" (
     rem add testing exclusions for travis
     rem set PYTEST_ADDOPTS=-m "(not ???)"
+    goto run_tests
 )
 
-set CHROME_WEBDRIVER_PATH=C:\# Eric\# Personal Development\###ERIC_TEMP###\ez-scrape\ezscrape\webdriver\chromedriver\74.0.3729.6\win32\chromedriver.exe
+:local_setup
+rem TODO - Different Handling Needed
+set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\74.0.3729.6\win32\chromedriver.exe
+echo ChromeDriver path set to "%CHROME_WEBDRIVER_PATH%"
+echo CHeck CHrome Driver Path Exists:
+dir "%CHROME_WEBDRIVER_PATH%"
+pause
 
+:run_tests
 pytest --rootdir="%PROJ_MAIN_DIR%" --cov="%PACKAGE_ROOT%"
 set return_code=%errorlevel%
 if %return_code% equ 0 (
