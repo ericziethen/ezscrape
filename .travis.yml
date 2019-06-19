@@ -14,27 +14,11 @@ branches:
 
 matrix:
   include:
-  - name: "Linux, Python 3.6"
-    os: linux
-    dist: xenial
-    python: "3.6"
   - name: "Linux, Python 3.7.3"
     os: linux
     dist: xenial
     python: "3.7.3"
     env: DEPLOY_ENABLED=True
-#  - name: "Windows, Python 3.6.8 (x32)"
-#    os: windows
-#    language: sh
-#    python: "3.6.8"
-#    before_install: choco install python --version=3.6.8 --x86
-#    env: PATH=/c/Python36:/c/Python36/Scripts:$PATH
-#  - name: "Windows, Python 3.6.8 (x64)"
-#    os: windows
-#    language: sh
-#    python: "3.6.8"
-#    before_install: choco install python --version=3.6.8
-#    env: PATH=/c/Python36:/c/Python36/Scripts:$PATH
 #  - name: "Windows, Python 3.7.3 (x32)"
 #    os: windows
 #    language: sh

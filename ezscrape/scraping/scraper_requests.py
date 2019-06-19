@@ -3,7 +3,6 @@
 """Module to provie Scrape functionality using the requests module."""
 
 import datetime
-import http
 import logging
 import socket
 

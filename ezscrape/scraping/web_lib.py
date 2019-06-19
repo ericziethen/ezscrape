@@ -5,14 +5,23 @@
 import http
 import urllib.parse
 
-from collections import namedtuple
+from dataclasses import dataclass
 
 import fake_useragent
 
 
+@dataclass
+class UrlSplit:
+    """Class representing a Split Url."""
+
+    scheme: str
+    hostname: str
+    port: int
+
+
 def random_useragent() -> str:
     """Generate a generic user agent."""
-    return fake_useragent.UserAgent().random
+    return fake_useragent.UserAgent().random  # type: ignore
 
 
 def phrase_from_response_code(code: int) -> str:
@@ -25,8 +34,8 @@ def phrase_from_response_code(code: int) -> str:
     return status_code.phrase
 
 
-def split_url(url: str):
+def split_url(url: str) -> UrlSplit:
     """Split the url into it's components."""
-    url_split = namedtuple('url_split', ['scheme', 'hostname', 'port'])
     result = urllib.parse.urlparse(url)
-    return url_split(result.scheme, result.hostname, result.port)
+    return UrlSplit(scheme=result.scheme, hostname=result.hostname,
+                    port=result.port)
