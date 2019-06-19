@@ -24,15 +24,14 @@ SPECIAL_LOCAL_ADDRESSES = [
 
 
 def scrape_url(config: core.ScrapeConfig) -> core.ScrapeResult:
-    """Generic function to handle all scraping requests."""
-
+    """Handle all scraping requests."""
     scraper: Optional[core.Scraper] = None
 
     # 1.) Try to use Normal Requests Model
     if scraper is None:
         try:
             scraper = scraper_requests.RequestsScraper(config)
-        except exceptions.ScrapeConfigError as error:
+        except exceptions.ScrapeConfigError:
             pass
 
     # 2.) Try Using Selenium chrome if no scraper found yet
@@ -52,7 +51,7 @@ def scrape_url(config: core.ScrapeConfig) -> core.ScrapeResult:
 
 
 def is_local_address(url: str) -> bool:
-    """Simple check whether the given url is a local address."""
+    """Check whether the given url is a local address."""
     # Parse the URL
     result = urllib.parse.urlparse(url)
     addr = result.netloc
@@ -79,7 +78,7 @@ def check_url(url: str, *, local_only: bool) -> bool:
         raise ValueError('Url is not a local address')
 
     result = scrape_url(core.ScrapeConfig(url))
-    if result._scrape_pages[0].status == core.ScrapeStatus.SUCCESS:
+    if result.status == core.ScrapeStatus.SUCCESS:
         return True
     else:
         return False
