@@ -44,7 +44,7 @@ class ScrapeConfig():
         self.javascript = False
         self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT
         self.useragent = None
-        self.attempt_multi_page = False
+        self.attempt_multi_page = False     # TODO - We don't need that I think
         self.wait_for_xpath = ''
         self.max_pages = DEFAULT_MAX_PAGES
         self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT
@@ -63,6 +63,7 @@ class ScrapeConfig():
 
     def __str__(self) -> str:
         return str(self.__dict__)
+
 
 class ScrapePage():
     """Class to represent a single scraped page."""
