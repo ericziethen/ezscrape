@@ -16,7 +16,7 @@ def test_selenium_scraper_valid_config():
     config = core.ScrapeConfig('url')
     config.javascript = True
     config.attempt_multi_page = True
-    config.wait_for_xpath = 'xpath'
+    config.xpath_next_button = 'xpath'
 
     scraper_selenium.SeleniumChromeScraper._validate_config(config)
     scraper = scraper_selenium.SeleniumChromeScraper(config)
@@ -49,7 +49,7 @@ SELENIUM_CHROME_GOOD_URLS_SINGLE_PAGE = [
 @pytest.mark.parametrize('url, javascript', SELENIUM_CHROME_GOOD_URLS_SINGLE_PAGE)
 def test_selenium_scraper_scrape_ok_single_page(url, javascript):
     config = core.ScrapeConfig(url)
-    config.wait_for_xpath = '/html'
+    config.xpath_next_button = '/html'
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
     assert result.url == url
@@ -70,7 +70,7 @@ def test_selenium_scraper_scrape_ok_single_page(url, javascript):
 @pytest.mark.selenium
 def test_selenium_scraper_scrape_paging():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01)
-    config.wait_for_xpath = R'''//a[@title='next' and @class='enabled']'''
+    config.xpath_next_button = R'''//a[@title='next' and @class='enabled']'''
     config.next_page_timeout = 0
     config.attempt_multi_page = True
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
@@ -88,7 +88,7 @@ def test_selenium_scraper_scrape_paging():
 @pytest.mark.selenium
 def test_selenium_chrome_good_scrape_max_next_page_reached():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_JS_STATIC_LINKS_01)
-    config.wait_for_xpath = '''//a[@title='next']'''
+    config.xpath_next_button = '''//a[@title='next']'''
     config.request_timeout = 2
     config.attempt_multi_page = True
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
@@ -105,7 +105,7 @@ def test_selenium_chrome_context_manager_good_scrape():
             javascript = url_tup[1]
 
             config = core.ScrapeConfig(url)
-            config.wait_for_xpath = '/html'
+            config.xpath_next_button = '/html'
             result = scraper_selenium.SeleniumChromeScraper(config, browser=chrome_session).scrape()
 
             page = result._scrape_pages[0].html
@@ -118,7 +118,7 @@ def test_selenium_chrome_context_manager_good_scrape():
 @pytest.mark.selenium
 def test_selenium_invalid_url():
     config = core.ScrapeConfig(common.URL_BAD_URL)
-    config.wait_for_xpath = 'xpath'
+    config.xpath_next_button = 'xpath'
     config.request_timeout = 1
  
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
@@ -130,7 +130,7 @@ def test_selenium_invalid_url():
 @pytest.mark.selenium
 def test_selenium_url_not_reachable():
     config = core.ScrapeConfig(common.URL_URL_NOT_ONLINE)
-    config.wait_for_xpath = 'xpath'
+    config.xpath_next_button = 'xpath'
     config.request_timeout = 1
  
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
@@ -144,7 +144,7 @@ def test_selenium_url_not_reachable():
 def test_selenium_scrape_timeout():
     config = core.ScrapeConfig(common.URL_TIMEOUT)
     config.request_timeout = 2
-    config.wait_for_xpath = 'xpath'
+    config.xpath_next_button = 'xpath'
 
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
     assert not result
@@ -158,7 +158,7 @@ def test_selenium_limit_pages():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_NO_JS_START_GOOD)
     config.attempt_multi_page = True
     config.max_pages = 1
-    config.wait_for_xpath = 'xpath'
+    config.xpath_next_button = 'xpath'
 
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
@@ -222,9 +222,9 @@ def test_class_ScraperWait_timeout_1_of_2_must_haves():
 
 SINGLE_WAIT_COMBO = [
     (scraper_selenium.WaitLogic.MUST_HAVE, scraper_selenium.WaitType.WAIT_FOR_LOCATED),
-    (scraper_selenium.WaitLogic.MIGHT_HAVE, scraper_selenium.WaitType.WAIT_FOR_LOCATED),
+    (scraper_selenium.WaitLogic.OPTIONAL, scraper_selenium.WaitType.WAIT_FOR_LOCATED),
     (scraper_selenium.WaitLogic.MUST_HAVE, scraper_selenium.WaitType.WAIT_FOR_CLICKABLE),
-    (scraper_selenium.WaitLogic.MIGHT_HAVE, scraper_selenium.WaitType.WAIT_FOR_CLICKABLE)
+    (scraper_selenium.WaitLogic.OPTIONAL, scraper_selenium.WaitType.WAIT_FOR_CLICKABLE)
 ]
 @pytest.mark.slow
 @pytest.mark.selenium
@@ -249,15 +249,16 @@ def test_class_ScraperWait_logic_type_combos(wait_logic, wait_type):
         assert 'MultiPageJS_STATIC_LINKS_WITH_STATE_2.html' in page
 
 
+@pytest.mark.eric
 @pytest.mark.selenium
 def test_class_ScraperWait_1_of_2_might_haves():
     url = common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01
 
     conditions = []
     conditions.append(scraper_selenium.WaitCondition('1', (By.XPATH, '''//a[@title='prev']'''),
-        scraper_selenium.WaitLogic.MUST_HAVE, scraper_selenium.WaitType.WAIT_FOR_LOCATED))
+        scraper_selenium.WaitLogic.OPTIONAL, scraper_selenium.WaitType.WAIT_FOR_LOCATED))
     conditions.append(scraper_selenium.WaitCondition('2', (By.XPATH, 'invalid-xpath'),
-        scraper_selenium.WaitLogic.MIGHT_HAVE, scraper_selenium.WaitType.WAIT_FOR_CLICKABLE))
+        scraper_selenium.WaitLogic.OPTIONAL, scraper_selenium.WaitType.WAIT_FOR_CLICKABLE))
 
     elem = None
     with scraper_selenium.SeleniumChromeSession() as chrome_session:
@@ -267,11 +268,16 @@ def test_class_ScraperWait_1_of_2_might_haves():
         assert common.NON_JS_TEST_STRING in page
         assert common.JS_TEST_STRING in page
 
-        elem = WebDriverWait(chrome_session, 3).until(
-            scraper_selenium.ScraperWait(conditions))
+        scraper_wait = scraper_selenium.ScraperWait(conditions)
 
-        assert elem is not  None
+        elem = WebDriverWait(chrome_session, 3).until(scraper_wait)
 
+        assert elem is not None
+        assert '1' in scraper_wait.found_elements
+
+        my_elem = scraper_wait.found_elements['1']
+        assert my_elem == elem
+        assert False
 
 # TODO def test_class_ScraperWait_result_populated():
 

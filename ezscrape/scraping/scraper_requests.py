@@ -101,6 +101,7 @@ class RequestsScraper(core.Scraper):
         if config.javascript:
             raise exceptions.ScrapeConfigError("No Support for Javascript")
 
-        if config.attempt_multi_page or config.wait_for_xpath:
+        # TODO - THIS NEEDS REFACTORING - Take new Selenium Fields into account, javascript, xpath etc
+        if config.attempt_multi_page or config.xpath_next_button:
             raise exceptions.ScrapeConfigError(
                 "No Support for Multipages, check fields")

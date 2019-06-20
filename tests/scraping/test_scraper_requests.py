@@ -21,12 +21,12 @@ REQUESTS_BAD_CONFIG = [
     (False, True, False),
     (False, False, True)
 ]
-@pytest.mark.parametrize('javascript, wait_for_xpath, multi_page', REQUESTS_BAD_CONFIG)
-def test_requests_scraper_invalid_config(javascript, wait_for_xpath, multi_page):
+@pytest.mark.parametrize('javascript, xpath_next_button, multi_page', REQUESTS_BAD_CONFIG)
+def test_requests_scraper_invalid_config(javascript, xpath_next_button, multi_page):
     config = core.ScrapeConfig('url')
     config.javascript = javascript
-    if wait_for_xpath:
-        config.wait_for_xpath = 'xpath'
+    if xpath_next_button:
+        config.xpath_next_button = 'xpath'
     config.attempt_multi_page = multi_page
 
     # Failed if We check the Config Directly

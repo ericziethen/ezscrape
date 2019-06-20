@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 DEFAULT_REQUEST_TIMEOUT = 5.0
 DEFAULT_NEXT_PAGE_TIMEOUT = 3
-DEFAULT_JAVASCRIPT_WAIT = 3.0
+DEFAULT_JAVASCRIPT_WAIT = 0.0
 DEFAULT_MAX_PAGES = 15
 
 
@@ -42,12 +42,13 @@ class ScrapeConfig():
         self.proxy_http = ''
         self.proxy_https = ''
         self.javascript = False             # TODO - We don't need that
-        self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT  # We don't need that
+        self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT  # TODO - If only this is set thn use Selenium
         self.useragent = None
         self.attempt_multi_page = False     # TODO - We don't need that I think
-        self.wait_for_xpath = ''
         self.max_pages = DEFAULT_MAX_PAGES
         self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT  # TODO - We might not Need that, Selenium is waiting for some element
+        self.xpath_next_button = ''
+        self.xpath_wait_for_loaded = ''
 
     @property
     def url(self) -> str:

@@ -31,7 +31,7 @@ def test_scrape_url_scraper_js():
     url = common.URL_SINGLE_PAGE_JS
     config = core.ScrapeConfig(url)
     config.javascript = True
-    config.wait_for_xpath = '''//p[@id='wait-text']'''
+    config.xpath_next_button = '''//p[@id='wait-text']'''
     result = scraper.scrape_url(config)
 
     assert result.url == url

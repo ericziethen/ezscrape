@@ -30,86 +30,13 @@ class SeleniumSetupError(Exception):
     """Exception is Selenium is not Setup Correctly."""
 
 
-
-
-# TODO - IMPLEMENT
-# TODO - Design a Solution based on the following recommodations
-# Some Ideas @ https://github.com/SeleniumHQ/selenium/issues/7121
-#            @ https://stackoverflow.com/questions/19377437/python-selenium-webdriver-writing-my-own-expected-condition
-# TODO - Hava a Mechanism where we can
-# TODO      - Define Multiple Wait Conditions
-# TODO      - Support And/Or
-# TODO      - Hanldle if Nothing Specified (ignore)
-# TODO      - Add Function vs __init__ setting???
-# !!!       How to handle with Different Waiting Events like
-#               - Wait for Element
-#               - Wait Until Clickable
-''' 
-    class expected_or(object):
-        """ perform a logical 'OR' check on multiple expected conditions """
-        def __init__(self, *args):
-            self.expected_conditions = args
-
-        def __call__(self, driver):
-            for expected_condition in self.expected_conditions:
-                try:
-                    result = expected_condition(driver)
-                    if result:
-                        return result
-                except NoSuchElementException:
-                    pass
-
-
-
-
-        from selenium.webdriver.support import expected_conditions as EC
-
-        class wait_for_text_to_start_with(object):
-            def __init__(self, locator, text_):
-                self.locator = locator
-                self.text = text_
-
-            def __call__(self, driver):
-                try:
-                    element_text = EC._find_element(driver, self.locator).text
-                    return element_text.startswith(self.text)
-                except StaleElementReferenceException:
-                    return False
-
-
-
-
-
-
-
-
-
-
-  IDEAS
-  - No Conditions (if allowed)
-  - elements that must be found (and-ish)
-  - elements that might be there (or-ish)
-  - store elements in dictionary as result (Default Dict as None???)
-
-    -> This gives us a basic and/or
-  - But What about more Complex
-    -> (A and B) OR (C and D)
-        -> Could have Sub Condition Class and 1 Handler of Condition
-        -> Possible but more complex
-        -> Class Condition
-        -> Class Waiter
-            -> Has Multiple Conditions
-        -> For our case that might be too complicated now as nested conditions
-           is not a simple issue
-'''
-
 @enum.unique
 class WaitLogic(enum.Enum):
     """Enum to define the Wait Logic."""
 
     # pylint: disable=invalid-name
     MUST_HAVE = 'Must have'
-    MIGHT_HAVE = 'Might have'
+    OPTIONAL = 'Optional'
 
 
 @enum.unique
@@ -131,7 +58,6 @@ class WaitCondition():
     # Maybe make it a Class, not needed dataclass if we add logic
     # TODO - If we verify at run time then can leave dataclass
 
-
 class ScraperWait():
     """Handle simple multiple conditions for waiting for Elements to Load."""
 
@@ -139,7 +65,7 @@ class ScraperWait():
         """Initialize the Waiter object."""
         # TODO - Maybe have setter to check Conditions are Valid (unique IDs?)
         self._conditions = conditions
-        self._found_elements = {}
+        self.found_elements = {}
         self._found_might_have_count = 0
         self._found_must_have_count = 0
 
@@ -147,7 +73,7 @@ class ScraperWait():
         # Test all outstanding events
         must_have_ok = True
         for cond in self._conditions:
-            if cond.name not in self._found_elements:
+            if cond.name not in self.found_elements:
                 elem = None
                 if cond.wait_type == WaitType.WAIT_FOR_CLICKABLE:
                     elem = self._find_element(
@@ -160,8 +86,8 @@ class ScraperWait():
                     must_have_ok = False
 
                 if elem is not None:
-                    self._found_elements[cond.name] = elem
-                    if cond.wait_logic == WaitLogic.MIGHT_HAVE:
+                    self.found_elements[cond.name] = elem
+                    if cond.wait_logic == WaitLogic.OPTIONAL:
                         self._found_might_have_count += 1
                     elif cond.wait_logic == WaitLogic.MUST_HAVE:
                         self._found_must_have_count += 1
@@ -174,10 +100,12 @@ class ScraperWait():
             if (self._found_must_have_count > 0) or\
                (self._found_might_have_count > 0):
                 # We need to return an element, so pick any
-                return list(self._found_elements)[0]
+                return list(self.found_elements.values())[0]
 
         # We haven't found an element fulfilling our conditions
         return False
+
+
 
     @staticmethod
     def _find_element(driver, locator, *,
@@ -270,7 +198,8 @@ class SeleniumChromeScraper(core.Scraper):
     def _validate_config(cls, config: core.ScrapeConfig) -> None:
         """Verify the config can be scraped by requests."""
         # TODO - THIS NEEDS REFACTORING, WE SHOULD SUPPORT EXPLICIT WAIT AS WELL
-        if not config.wait_for_xpath:
+        # TODO - WE SHOULD BE ABLE TO HANDLE EVERYTHING IN HERE
+        if not config.xpath_next_button:
             raise exceptions.ScrapeConfigError(
                 'Selenium needs and Xpath Element Specified')
 
@@ -279,7 +208,6 @@ class SeleniumChromeScraper(core.Scraper):
         # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
         result = core.ScrapeResult(self.config.url)
         multi_page = self.config.attempt_multi_page
-        xpath_bttn = self.config.wait_for_xpath
         count = 0
 
         try:
@@ -293,61 +221,54 @@ class SeleniumChromeScraper(core.Scraper):
                 # SOME PAGE LOAD INFO AND TIPS if there are issues
                 # http://www.obeythetestinggoat.com/how-to-get-selenium-to-wait-for-page-load-after-a-click.html
 
+                # No Default Waiting Condition = wait for load timeout
+                wait_conditions = []
+
+                # Add a waiting Condition
+                if self.config.xpath_next_button:
+                    wait_conditions.append(browser.WaitCondition(
+                        'next_button', (By.XPATH, self.config.xpath_next_button),
+                        WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_CLICKABLE))
+
+                if self.config.xpath_wait_for_loaded:
+                    wait_conditions.append(browser.WaitCondition(
+                        'load', (By.XPATH, self.config.xpath_next_button),
+                        WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
+
+                scraper_wait = ScraperWait(wait_conditions)
+
+                time = datetime.datetime.now()
                 try:
-                    time = datetime.datetime.now()
-                    # TODO - Can't remember why we are having 2 different ways
-                    # TODO - Try to avoid using multi_page, but is there a case for both?
-                    # TODO - Maybe have a Next Button Xpath and a Wait For Xpath?
-                    # TODO - How to wait for both if we have both?
-                    
-                    # TODO - Design a Solution based on the following recommodations
-                    # Some Ideas @ https://github.com/SeleniumHQ/selenium/issues/7121
-                    # TODO - Hava a Mechanism where we can
-                    # TODO      - Define Multiple Wait Conditions
-                    # TODO      - Support And/Or
-                    # TODO      - Hanldle if Nothing Specified (ignore)
-                    # TODO      - Add Function vs __init__ setting???
-
-
-
-
-
-                    if multi_page:
-                        element = WebDriverWait(
-                            browser, self.config.request_timeout).until(
-                                EC.element_to_be_clickable((By.XPATH, xpath_bttn)))
-                    else:
-                        element = WebDriverWait(
-                            browser, self.config.request_timeout).until(
-                                EC.presence_of_element_located((By.XPATH, xpath_bttn)))
+                    element = WebDriverWait(
+                        browser, self.config.request_timeout).until(scraper_wait)
                 except TimeoutException as error:
                     result.status = core.ScrapeStatus.TIMEOUT
                     # TODO - Maybe this should be an error and success state for each sub page
                     #result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
                     timediff = datetime.datetime.now() - time
                     scrape_time = (timediff.total_seconds() * 1000 +
-                                timediff.microseconds / 1000)
+                                   timediff.microseconds / 1000)
                     result.add_scrape_page(browser.page_source,
-                                            scrape_time=scrape_time,
-                                            status=core.ScrapeStatus.TIMEOUT)
+                                           scrape_time=scrape_time,
+                                           status=core.ScrapeStatus.TIMEOUT)
                     result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
                     break
                 else:
                     result.status = core.ScrapeStatus.SUCCESS
                     timediff = datetime.datetime.now() - time
                     scrape_time = (timediff.total_seconds() * 1000 +
-                                    timediff.microseconds / 1000)
+                                   timediff.microseconds / 1000)
                     result.add_scrape_page(browser.page_source,
-                                        scrape_time=scrape_time,
-                                        status=core.ScrapeStatus.SUCCESS)
+                                           scrape_time=scrape_time,
+                                           status=core.ScrapeStatus.SUCCESS)
 
                     if count >= self.config.max_pages:
                         logger.debug(F'Paging limit of {self.config.max_pages} reached, stop scraping')
                         break
 
-                    if multi_page:
-                        # Click the next Button
-                        element.click()
+                    # If Next Button Found Press
+                    if 'next_button' in scraper_wait.found_elements:
+                        scraper_wait.found_elements['next_button'].click()
                     else:
                         break
 

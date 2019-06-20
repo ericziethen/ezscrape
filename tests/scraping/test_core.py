@@ -16,7 +16,7 @@ def test_scrape_config_default_values_set():
     assert not config.proxy_http
     assert not config.proxy_https
     assert config.useragent is None
-    assert not config.wait_for_xpath
+    assert not config.xpath_next_button
     assert not config.javascript
     assert not config.attempt_multi_page
 
