@@ -50,13 +50,14 @@ class WaitType(enum.Enum):
 
 @dataclass
 class WaitCondition():
-    name: str  # TODO - Must enforce Unique Names for Conditions
     locator: Tuple[By, str]
     wait_logic: WaitLogic = WaitLogic.MUST_HAVE
     wait_type: WaitType = WaitType.WAIT_FOR_LOCATED
-    # TODO - Do we need to Validate Conditions are Properly formated?
-    # Maybe make it a Class, not needed dataclass if we add logic
-    # TODO - If we verify at run time then can leave dataclass
+
+    def id(self):
+        """Provide the Id of this Element."""
+        return str(self)
+
 
 class ScraperWait():
     """Handle simple multiple conditions for waiting for Elements to Load."""
@@ -73,7 +74,7 @@ class ScraperWait():
         # Test all outstanding events
         must_have_ok = True
         for cond in self._conditions:
-            if cond.name not in self.found_elements:
+            if cond.id() not in self.found_elements:
                 elem = None
                 if cond.wait_type == WaitType.WAIT_FOR_CLICKABLE:
                     elem = self._find_element(
@@ -86,7 +87,7 @@ class ScraperWait():
                     must_have_ok = False
 
                 if elem is not None:
-                    self.found_elements[cond.name] = elem
+                    self.found_elements[cond.id()] = elem
                     if cond.wait_logic == WaitLogic.OPTIONAL:
                         self._found_might_have_count += 1
                     elif cond.wait_logic == WaitLogic.MUST_HAVE:
@@ -226,13 +227,14 @@ class SeleniumChromeScraper(core.Scraper):
 
                 # Add a waiting Condition
                 if self.config.xpath_next_button:
-                    wait_conditions.append(browser.WaitCondition(
-                        'next_button', (By.XPATH, self.config.xpath_next_button),
-                        WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_CLICKABLE))
+                    next_button_condition = browser.WaitCondition(
+                        (By.XPATH, self.config.xpath_next_button),
+                        WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_CLICKABLE)
+                    wait_conditions.append(next_button_condition)
 
                 if self.config.xpath_wait_for_loaded:
                     wait_conditions.append(browser.WaitCondition(
-                        'load', (By.XPATH, self.config.xpath_next_button),
+                        (By.XPATH, self.config.xpath_next_button),
                         WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
 
                 scraper_wait = ScraperWait(wait_conditions)
@@ -267,8 +269,8 @@ class SeleniumChromeScraper(core.Scraper):
                         break
 
                     # If Next Button Found Press
-                    if 'next_button' in scraper_wait.found_elements:
-                        scraper_wait.found_elements['next_button'].click()
+                    if next_button_condition.id() in scraper_wait.found_elements:
+                        scraper_wait.found_elements[next_button_condition.id()].click()
                     else:
                         break
 

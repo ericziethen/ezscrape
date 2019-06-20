@@ -166,18 +166,16 @@ def test_selenium_limit_pages():
 
 
 def test_class_WaitCondition():
-    condition = scraper_selenium.WaitCondition('timeout', (By.XPATH, 'invalid-xpath'),
+    condition = scraper_selenium.WaitCondition((By.XPATH, 'invalid-xpath'),
         scraper_selenium.WaitLogic.MUST_HAVE, scraper_selenium.WaitType.WAIT_FOR_LOCATED)
     assert condition is not None
-
-# TODO def test_class_WaitCondition_invalid(): # Maybe, if decide we need validator
 
 
 @pytest.mark.selenium
 def test_class_ScraperWait_timeout():
     url = common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01
 
-    condition = scraper_selenium.WaitCondition('timeout', (By.XPATH, 'invalid-xpath'),
+    condition = scraper_selenium.WaitCondition((By.XPATH, 'invalid-xpath'),
         scraper_selenium.WaitLogic.MUST_HAVE, scraper_selenium.WaitType.WAIT_FOR_LOCATED)
 
     elem = None
@@ -200,9 +198,9 @@ def test_class_ScraperWait_timeout_1_of_2_must_haves():
     url = common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01
 
     conditions = []
-    conditions.append(scraper_selenium.WaitCondition('1', (By.XPATH, '''//a[@title='prev']'''),
+    conditions.append(scraper_selenium.WaitCondition((By.XPATH, '''//a[@title='prev']'''),
         scraper_selenium.WaitLogic.MUST_HAVE, scraper_selenium.WaitType.WAIT_FOR_LOCATED))
-    conditions.append(scraper_selenium.WaitCondition('2', (By.XPATH, 'invalid-xpath'),
+    conditions.append(scraper_selenium.WaitCondition((By.XPATH, 'invalid-xpath'),
         scraper_selenium.WaitLogic.MUST_HAVE, scraper_selenium.WaitType.WAIT_FOR_CLICKABLE))
 
     elem = None
@@ -233,7 +231,7 @@ def test_class_ScraperWait_logic_type_combos(wait_logic, wait_type):
     url = common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01
 
     condition = scraper_selenium.WaitCondition(
-        'test', (By.XPATH, '''//a[@title='page1']'''), wait_logic, wait_type)
+        (By.XPATH, '''//a[@title='page1']'''), wait_logic, wait_type)
 
     with scraper_selenium.SeleniumChromeSession() as chrome_session:
         chrome_session.get(url)
@@ -249,15 +247,15 @@ def test_class_ScraperWait_logic_type_combos(wait_logic, wait_type):
         assert 'MultiPageJS_STATIC_LINKS_WITH_STATE_2.html' in page
 
 
-@pytest.mark.eric
 @pytest.mark.selenium
 def test_class_ScraperWait_1_of_2_might_haves():
     url = common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01
 
     conditions = []
-    conditions.append(scraper_selenium.WaitCondition('1', (By.XPATH, '''//a[@title='prev']'''),
-        scraper_selenium.WaitLogic.OPTIONAL, scraper_selenium.WaitType.WAIT_FOR_LOCATED))
-    conditions.append(scraper_selenium.WaitCondition('2', (By.XPATH, 'invalid-xpath'),
+    good_cond = scraper_selenium.WaitCondition((By.XPATH, '''//a[@title='prev']'''),
+        scraper_selenium.WaitLogic.OPTIONAL, scraper_selenium.WaitType.WAIT_FOR_LOCATED)
+    conditions.append(good_cond)
+    conditions.append(scraper_selenium.WaitCondition((By.XPATH, 'invalid-xpath'),
         scraper_selenium.WaitLogic.OPTIONAL, scraper_selenium.WaitType.WAIT_FOR_CLICKABLE))
 
     elem = None
@@ -273,13 +271,10 @@ def test_class_ScraperWait_1_of_2_might_haves():
         elem = WebDriverWait(chrome_session, 3).until(scraper_wait)
 
         assert elem is not None
-        assert '1' in scraper_wait.found_elements
+        assert good_cond.id() in scraper_wait.found_elements
 
-        my_elem = scraper_wait.found_elements['1']
+        my_elem = scraper_wait.found_elements[good_cond.id()]
         assert my_elem == elem
-        assert False
-
-# TODO def test_class_ScraperWait_result_populated():
 
 
 #TODO - ADD SOME PROXY TESTS
