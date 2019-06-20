@@ -9,7 +9,7 @@ import logging
 import os
 
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 from selenium.common.exceptions import TimeoutException, WebDriverException, NoSuchElementException
 from selenium import webdriver
@@ -35,6 +35,7 @@ class SeleniumSetupError(Exception):
 # TODO - IMPLEMENT
 # TODO - Design a Solution based on the following recommodations
 # Some Ideas @ https://github.com/SeleniumHQ/selenium/issues/7121
+#            @ https://stackoverflow.com/questions/19377437/python-selenium-webdriver-writing-my-own-expected-condition
 # TODO - Hava a Mechanism where we can
 # TODO      - Define Multiple Wait Conditions
 # TODO      - Support And/Or
@@ -57,6 +58,32 @@ class SeleniumSetupError(Exception):
                         return result
                 except NoSuchElementException:
                     pass
+
+
+
+
+        from selenium.webdriver.support import expected_conditions as EC
+
+        class wait_for_text_to_start_with(object):
+            def __init__(self, locator, text_):
+                self.locator = locator
+                self.text = text_
+
+            def __call__(self, driver):
+                try:
+                    element_text = EC._find_element(driver, self.locator).text
+                    return element_text.startswith(self.text)
+                except StaleElementReferenceException:
+                    return False
+
+
+
+
+
+
+
+
+
 
   IDEAS
   - No Conditions (if allowed)
@@ -96,9 +123,13 @@ class WaitType(enum.Enum):
 
 @dataclass
 class WaitCondition():
+    name: str  # TODO - Must enforce Unique Names for Conditions
     locator: Tuple[By, str]
-    wait_type: WaitType
-    wait_logic: WaitLogic
+    wait_logic: WaitLogic = WaitLogic.MUST_HAVE
+    wait_type: WaitType = WaitType.WAIT_FOR_LOCATED
+    # TODO - Do we need to Validate Conditions are Properly formated?
+    # Maybe make it a Class, not needed dataclass if we add logic
+    # TODO - If we verify at run time then can leave dataclass
 
 
 class ScraperWait():
@@ -106,41 +137,68 @@ class ScraperWait():
 
     def __init__(self, conditions: List[WaitCondition]):
         """Initialize the Waiter object."""
-        self._must_have_list: List[WaitCondition] = []
-        self._might_have_list: List[WaitCondition] = []
-
-        # Separate the conditions
-        for cond in conditions:
-            if cond.wait_type == WaitLogic.MUST_HAVE:
-                self._must_have_list.append(cond)
-            elif cond.wait_type == WaitLogic.MIGHT_HAVE:
-                self._might_have_list.append(cond)
-            else:
-                raise ValueError(F'Unexpected Wait Type: {cond.wait_type}')
+        # TODO - Maybe have setter to check Conditions are Valid (unique IDs?)
+        self._conditions = conditions
+        self._found_elements = {}
+        self._found_might_have_count = 0
+        self._found_must_have_count = 0
 
     def __call__(self, driver):
-        # Handle 
-        driver.find_element???
-        how to do clickable and locatable
-        EC.element_to_be_clickable
-        EC.presence_of_element_located
+        # Test all outstanding events
+        must_have_ok = True
+        for cond in self._conditions:
+            if cond.name not in self._found_elements:
+                elem = None
+                if cond.wait_type == WaitType.WAIT_FOR_CLICKABLE:
+                    elem = self._find_element(
+                        driver, cond.locator, visible=True, enabled=True)
+                elif cond.wait_type == WaitType.WAIT_FOR_LOCATED:
+                    elem = self._find_element(driver, cond.locator)
 
-    def _wait_for_clickable(self):
+                # If must have and not found we cannot complete yet
+                if (elem is None) and (cond.wait_logic == WaitLogic.MUST_HAVE):
+                    must_have_ok = False
+
+                if elem is not None:
+                    self._found_elements[cond.name] = elem
+                    if cond.wait_logic == WaitLogic.MIGHT_HAVE:
+                        self._found_might_have_count += 1
+                    elif cond.wait_logic == WaitLogic.MUST_HAVE:
+                        self._found_must_have_count += 1
+
+        # Verify if we have everything we need
+        # Our conditions are met if
+        #   - all must_haves are met and at least 1 must_have in list
+        #   - no must_haves defined and at least 1 might have found
+        if must_have_ok:  # No issues with Must Haves (all good or none)
+            if (self._found_must_have_count > 0) or\
+               (self._found_might_have_count > 0):
+                # We need to return an element, so pick any
+                return list(self._found_elements)[0]
+
+        # We haven't found an element fulfilling our conditions
+        return False
+
+    @staticmethod
+    def _find_element(driver, locator, *,
+                      visible: bool = False, enabled: bool = False):
+        found_elem = None
+        try:
+            candidate_elem = EC._find_element(driver, locator)
+        except NoSuchElementException:
+            pass
+        else:
+            if (visible and not candidate_elem.is_displayed()) or\
+               (enabled and not candidate_elem.is_enabled()):
+                found_elem = None
+            else:
+                found_elem = candidate_elem
+
+        return found_elem
 
 
-
-    def _wait_for_locatable(self):
-
-
-
-
-
-
-
-
-
-
-# TODO - Can we write this as a normal Context Manager using __enter__
+# TODO - Can we write this as a normal Context Manager using __enter__?
+# TODO - There might be a reason we picked this but we need to comment if not possible
 @contextlib.contextmanager
 def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
     """Context Manager wrapper for a Selenium Chrome Session."""
@@ -166,6 +224,7 @@ def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
         raise SeleniumSetupError((F'Webdriver not found, set path as env '
                                   F'Variable: "{CHROME_WEBDRIVER_ENV_VAR}"'))
 
+    # TODO - Is that still valid now that we have separate proxy settings?
     proxy = ''
     if config is not None:
         if config.url.startswith('https'):
@@ -186,7 +245,9 @@ def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
     with webdriver.Chrome(
             chrome_options=chrome_options,
             executable_path=chrome_web_driver_path) as browser:
+        print(F'BEFORE: {datetime.datetime.now()}')
         yield (browser)
+        print(F'AFTER: {datetime.datetime.now()}')
 
 
 class SeleniumChromeScraper(core.Scraper):
