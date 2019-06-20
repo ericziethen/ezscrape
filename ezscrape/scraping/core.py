@@ -41,13 +41,13 @@ class ScrapeConfig():
         self.request_timeout = DEFAULT_REQUEST_TIMEOUT
         self.proxy_http = ''
         self.proxy_https = ''
-        self.javascript = False
-        self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT
+        self.javascript = False             # TODO - We don't need that
+        self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT  # We don't need that
         self.useragent = None
         self.attempt_multi_page = False     # TODO - We don't need that I think
         self.wait_for_xpath = ''
         self.max_pages = DEFAULT_MAX_PAGES
-        self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT
+        self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT  # TODO - We might not Need that, Selenium is waiting for some element
 
     @property
     def url(self) -> str:
