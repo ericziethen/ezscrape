@@ -11,7 +11,8 @@ import os
 from dataclasses import dataclass
 from typing import Dict, List, Tuple
 
-from selenium.common.exceptions import TimeoutException, WebDriverException, NoSuchElementException
+from selenium.common.exceptions import (
+    NoSuchElementException, StaleElementReferenceException, TimeoutException, WebDriverException)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -74,7 +75,6 @@ class ScraperWait():
     def __call__(self, driver):
         # Test all outstanding events
         must_have_ok = True
-        print(F'### CHECKING CONDITIONS START: {self.found_elements}')
         for cond in self._conditions:
             if cond.id() not in self.found_elements:
                 elem = None
@@ -103,10 +103,8 @@ class ScraperWait():
             if (self._found_must_have_count > 0) or\
                (self._found_might_have_count > 0):
                 # We need to return an element, so pick any
-                print(F'### CHECKING CONDITIONS FULFILLED: {self.found_elements}')
                 return list(self.found_elements.values())[0]
 
-        print(F'### CHECKING CONDITIONS END: {self.found_elements}')
         # We haven't found an element fulfilling our conditions
         return False
 
@@ -240,14 +238,19 @@ class SeleniumChromeScraper(core.Scraper):
         else:
             while True:
                 count += 1
+                print(F'### Page Load Count: {count}')
+
                 # SOME PAGE LOAD INFO AND TIPS if there are issues
                 # http://www.obeythetestinggoat.com/how-to-get-selenium-to-wait-for-page-load-after-a-click.html
 
                 try:
-                    print(F'{datetime.datetime.now()} - Start Explicit wait')
-                    element = WebDriverWait(
-                        browser, self.config.request_timeout).until(scraper_wait)
-                    print(F'{datetime.datetime.now()} - Finish Explicit wait')
+                    if wait_conditions:
+                        print(F'{datetime.datetime.now()} - Start Explicit wait')
+                        element = WebDriverWait(
+                            browser, self.config.request_timeout).until(scraper_wait)
+                        print(F'{datetime.datetime.now()} - Finish Explicit wait')
+                    else:
+                        print(F'{datetime.datetime.now()} - Skip Explicit wait, no Conditions')
                 except TimeoutException as error:
                     print(F'{datetime.datetime.now()} - TimeoutException')
                     result.status = core.ScrapeStatus.TIMEOUT
@@ -271,14 +274,30 @@ class SeleniumChromeScraper(core.Scraper):
                         logger.debug(F'Paging limit of {self.config.max_pages} reached, stop scraping')
                         break
 
+                    # TODO - We're getting some staleness issues here
+                    # TODO - See https://stackoverflow.com/questions/40029549/how-to-avoid-staleelementreferenceexception-in-selenium-python
+                    # TODO - For Ideas
                     # If Next Button Found Press
                     if (next_button_condition is not None) and\
                        (next_button_condition.id() in scraper_wait.found_elements):
                     
-                        print('Clicking Next Button')
-                        scraper_wait.found_elements[next_button_condition.id()].click()
+                        next_elem = scraper_wait.found_elements[next_button_condition.id()]
+                        
+
+                        # TODO - We need to clear the found elements to search for them again
+                        scraper_wait.found_elements = {}
+
+                        #browser.implicitly_wait(5)
+                        print(F'Clicking Next Button: {next_elem}')
+                        next_elem.click()
+
+                        # TODO - Some Ideas:
+                        # https://blog.codeship.com/get-selenium-to-wait-for-page-load/
+                        #WebDriverWait(browser, 10).until(EC.staleness_of(next_elem))
+                        #browser.wait.until(EC.staleness_of(next_elem))
                     else:
                         break
 
         return result
+
 
