@@ -25,7 +25,6 @@ def test_scrape_url_scraper_no_js():
     assert common.NON_JS_TEST_STRING in page
     assert common.JS_TEST_STRING not in page
 
-@pytest.mark.eric
 @pytest.mark.selenium # This could potentially change
 def test_scrape_url_scraper_js():
     url = common.URL_SINGLE_PAGE_JS

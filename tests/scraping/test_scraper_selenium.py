@@ -41,6 +41,7 @@ SELENIUM_CHROME_GOOD_URLS_SINGLE_PAGE = [
     #(common.URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True),
     #(common.URL_MULTI_PAGE_NO_JS_START_GOOD, False)
 ]
+@pytest.mark.eric1
 @pytest.mark.slow
 @pytest.mark.selenium
 @pytest.mark.parametrize('url, javascript', SELENIUM_CHROME_GOOD_URLS_SINGLE_PAGE)
@@ -74,6 +75,7 @@ def test_selenium_scraper_wait_for_page_load_seconds_not_enough_time():
     assert result.status == core.ScrapeStatus.ERROR
 
 
+@pytest.mark.eric2
 @pytest.mark.slow
 @pytest.mark.selenium
 def test_selenium_scraper_wait_for_page_load_seconds_enough_time():
@@ -92,6 +94,7 @@ def test_selenium_scraper_wait_for_page_load_seconds_enough_time():
     assert common.JS_TEST_STRING in page
 
 
+@pytest.mark.eric3
 @pytest.mark.slow
 @pytest.mark.selenium
 def test_selenium_scraper_scrape_paging():
@@ -108,6 +111,7 @@ def test_selenium_scraper_scrape_paging():
             assert scrape_result.status == core.ScrapeStatus.SUCCESS
 
 
+@pytest.mark.eric4
 @pytest.mark.slow
 @pytest.mark.selenium
 def test_selenium_chrome_good_scrape_max_next_page_reached():

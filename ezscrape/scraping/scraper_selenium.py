@@ -66,6 +66,7 @@ class ScraperWait():
         """Initialize the Waiter object."""
         # TODO - Maybe have setter to check Conditions are Valid (unique IDs?)
         self._conditions = conditions
+        print(F'ScraperWait_init, conditions: {conditions}')
         self.found_elements = {}
         self._found_might_have_count = 0
         self._found_must_have_count = 0
@@ -73,6 +74,7 @@ class ScraperWait():
     def __call__(self, driver):
         # Test all outstanding events
         must_have_ok = True
+        print(F'### CHECKING CONDITIONS START: {self.found_elements}')
         for cond in self._conditions:
             if cond.id() not in self.found_elements:
                 elem = None
@@ -101,8 +103,10 @@ class ScraperWait():
             if (self._found_must_have_count > 0) or\
                (self._found_might_have_count > 0):
                 # We need to return an element, so pick any
+                print(F'### CHECKING CONDITIONS FULFILLED: {self.found_elements}')
                 return list(self.found_elements.values())[0]
 
+        print(F'### CHECKING CONDITIONS END: {self.found_elements}')
         # We haven't found an element fulfilling our conditions
         return False
 
@@ -112,6 +116,7 @@ class ScraperWait():
     def _find_element(driver, locator, *,
                       visible: bool = False, enabled: bool = False):
         found_elem = None
+        print(F'_find_element(): Locator: {locator}, visible: {visible}, enabled: {enabled}')
         try:
             candidate_elem = EC._find_element(driver, locator)
         except NoSuchElementException:
@@ -214,7 +219,7 @@ class SeleniumChromeScraper(core.Scraper):
         
         if self.config.xpath_wait_for_loaded:
             wait_conditions.append(WaitCondition(
-                (By.XPATH, self.config.xpath_next_button),
+                (By.XPATH, self.config.xpath_wait_for_loaded),
                 WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
 
         # Figure out if we need to wait for anything
