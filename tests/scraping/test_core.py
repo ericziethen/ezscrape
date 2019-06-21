@@ -10,15 +10,11 @@ def test_scrape_config_default_values_set():
     
     assert config.url == url
     assert config.request_timeout == core.DEFAULT_REQUEST_TIMEOUT
-    assert config.javascript_wait == core.DEFAULT_JAVASCRIPT_WAIT
     assert config.max_pages == core.DEFAULT_MAX_PAGES
-    assert config.next_page_timeout == core.DEFAULT_NEXT_PAGE_TIMEOUT
     assert not config.proxy_http
     assert not config.proxy_https
     assert config.useragent is None
     assert not config.xpath_next_button
-    assert not config.javascript
-    assert not config.attempt_multi_page
 
 
 @pytest.mark.parametrize('invalid_url', [None, '', 15])

@@ -14,9 +14,6 @@ import ezscrape.scraping.scraper_selenium as scraper_selenium
 
 def test_selenium_scraper_valid_config():
     config = core.ScrapeConfig('url')
-    config.javascript = True
-    config.attempt_multi_page = True
-    config.xpath_next_button = 'xpath'
 
     scraper_selenium.SeleniumChromeScraper._validate_config(config)
     scraper = scraper_selenium.SeleniumChromeScraper(config)
@@ -24,37 +21,35 @@ def test_selenium_scraper_valid_config():
 
 
 def test_selenium_scraper_invalid_config():
-    config = core.ScrapeConfig('url')
+    config = None
 
     # Failed if We check the Config Directly
-    with pytest.raises(exceptions.ScrapeConfigError):
+    with pytest.raises(ValueError):
         scraper_selenium.SeleniumChromeScraper._validate_config(config)
 
     # Fail if we try to Create the Scraper
-    with pytest.raises(exceptions.ScrapeConfigError):
+    with pytest.raises(ValueError):
         scraper_selenium.SeleniumChromeScraper(config)
 
 
 SELENIUM_CHROME_GOOD_URLS_SINGLE_PAGE = [
     (common.URL_SINGLE_PAGE_JS, True),
-    (common.URL_SINGLE_PAGE_JS_DELAYED, True),
-    (common.URL_SINGLE_PAGE_NO_JS, False),
-    (common.URL_MULTI_PAGE_JS_STATIC_LINKS_01, True),
-    (common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01, True),
-    (common.URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True),
-    (common.URL_MULTI_PAGE_NO_JS_START_GOOD, False)
+    #(common.URL_SINGLE_PAGE_JS_DELAYED, True),
+    #(common.URL_SINGLE_PAGE_NO_JS, False),
+    #(common.URL_MULTI_PAGE_JS_STATIC_LINKS_01, True),
+    #(common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01, True),
+    #(common.URL_MULTI_PAGE_JS_DYNAMIC_LINKS, True),
+    #(common.URL_MULTI_PAGE_NO_JS_START_GOOD, False)
 ]
 @pytest.mark.slow
 @pytest.mark.selenium
 @pytest.mark.parametrize('url, javascript', SELENIUM_CHROME_GOOD_URLS_SINGLE_PAGE)
 def test_selenium_scraper_scrape_ok_single_page(url, javascript):
     config = core.ScrapeConfig(url)
-    config.xpath_next_button = '/html'
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
     assert result.url == url
     assert result.status == core.ScrapeStatus.SUCCESS
-    assert result.request_time_ms > 0
     assert not result.error_msg
     assert len(result) == 1
     page = result._scrape_pages[0].html
@@ -68,11 +63,40 @@ def test_selenium_scraper_scrape_ok_single_page(url, javascript):
 
 @pytest.mark.slow
 @pytest.mark.selenium
+def test_selenium_scraper_wait_for_page_load_seconds_not_enough_time():
+    config = core.ScrapeConfig(common.URL_SINGLE_PAGE_JS_DELAYED)
+    # URL_SINGLE_PAGE_JS_DELAYED has 3 seconds load time for JS
+    config.request_timeout = 10
+    config.wait_for_page_load_seconds = 2
+
+    result = scraper_selenium.SeleniumChromeScraper(config).scrape()
+
+    assert result.status == core.ScrapeStatus.ERROR
+
+
+@pytest.mark.slow
+@pytest.mark.selenium
+def test_selenium_scraper_wait_for_page_load_seconds_enough_time():
+    config = core.ScrapeConfig(common.URL_SINGLE_PAGE_JS_DELAYED)
+    # URL_SINGLE_PAGE_JS_DELAYED has 3 seconds load time for JS
+    config.request_timeout = 10
+    config.wait_for_page_load_seconds = 8
+
+    result = scraper_selenium.SeleniumChromeScraper(config).scrape()
+
+    assert result.status == core.ScrapeStatus.SUCCESS
+    assert len(result) == 1
+    page = result._scrape_pages[0].html
+
+    assert common.NON_JS_TEST_STRING in page
+    assert common.JS_TEST_STRING in page
+
+
+@pytest.mark.slow
+@pytest.mark.selenium
 def test_selenium_scraper_scrape_paging():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01)
     config.xpath_next_button = R'''//a[@title='next' and @class='enabled']'''
-    config.next_page_timeout = 0
-    config.attempt_multi_page = True
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
     assert len(result) == 2
 
@@ -90,7 +114,6 @@ def test_selenium_chrome_good_scrape_max_next_page_reached():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_JS_STATIC_LINKS_01)
     config.xpath_next_button = '''//a[@title='next']'''
     config.request_timeout = 2
-    config.attempt_multi_page = True
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
     assert len(result) == core.DEFAULT_MAX_PAGES
 
@@ -105,7 +128,6 @@ def test_selenium_chrome_context_manager_good_scrape():
             javascript = url_tup[1]
 
             config = core.ScrapeConfig(url)
-            config.xpath_next_button = '/html'
             result = scraper_selenium.SeleniumChromeScraper(config, browser=chrome_session).scrape()
 
             page = result._scrape_pages[0].html
@@ -118,7 +140,6 @@ def test_selenium_chrome_context_manager_good_scrape():
 @pytest.mark.selenium
 def test_selenium_invalid_url():
     config = core.ScrapeConfig(common.URL_BAD_URL)
-    config.xpath_next_button = 'xpath'
     config.request_timeout = 1
  
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
@@ -130,8 +151,7 @@ def test_selenium_invalid_url():
 @pytest.mark.selenium
 def test_selenium_url_not_reachable():
     config = core.ScrapeConfig(common.URL_URL_NOT_ONLINE)
-    config.xpath_next_button = 'xpath'
-    config.request_timeout = 1
+    config.request_timeout = 3
  
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
@@ -144,21 +164,17 @@ def test_selenium_url_not_reachable():
 def test_selenium_scrape_timeout():
     config = core.ScrapeConfig(common.URL_TIMEOUT)
     config.request_timeout = 2
-    config.xpath_next_button = 'xpath'
 
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
     assert not result
     assert result.error_msg
-    assert result.request_time_ms < (config.request_timeout + 0.5) * 1000 # Account for functio overhead
 
 
 @pytest.mark.slow
 @pytest.mark.selenium
 def test_selenium_limit_pages():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_NO_JS_START_GOOD)
-    config.attempt_multi_page = True
     config.max_pages = 1
-    config.xpath_next_button = 'xpath'
 
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 

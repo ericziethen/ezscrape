@@ -16,7 +16,6 @@ def test_scrape_url_scraper_no_js():
     # Validate Result has the correct Data
     assert result.url == url
     assert result.status == core.ScrapeStatus.SUCCESS
-    assert result.request_time_ms > 0
     assert not result.error_msg
     assert len(result) == 1
     assert result._scrape_pages[0].status == core.ScrapeStatus.SUCCESS
@@ -26,17 +25,16 @@ def test_scrape_url_scraper_no_js():
     assert common.NON_JS_TEST_STRING in page
     assert common.JS_TEST_STRING not in page
 
+@pytest.mark.eric
 @pytest.mark.selenium # This could potentially change
 def test_scrape_url_scraper_js():
     url = common.URL_SINGLE_PAGE_JS
     config = core.ScrapeConfig(url)
-    config.javascript = True
-    config.xpath_next_button = '''//p[@id='wait-text']'''
+    config.xpath_wait_for_loaded = '''//p[@id='wait-text']'''
     result = scraper.scrape_url(config)
 
     assert result.url == url
     assert result.status == core.ScrapeStatus.SUCCESS
-    assert result.request_time_ms > 0
     assert not result.error_msg
     assert len(result) == 1
     page = result._scrape_pages[0].html

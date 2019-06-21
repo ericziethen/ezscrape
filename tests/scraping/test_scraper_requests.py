@@ -21,13 +21,15 @@ REQUESTS_BAD_CONFIG = [
     (False, True, False),
     (False, False, True)
 ]
-@pytest.mark.parametrize('javascript, xpath_next_button, multi_page', REQUESTS_BAD_CONFIG)
-def test_requests_scraper_invalid_config(javascript, xpath_next_button, multi_page):
+@pytest.mark.parametrize('xpath_located, xpath_next, wait_for_load', REQUESTS_BAD_CONFIG)
+def test_requests_scraper_invalid_config(xpath_located, xpath_next, wait_for_load):
     config = core.ScrapeConfig('url')
-    config.javascript = javascript
-    if xpath_next_button:
-        config.xpath_next_button = 'xpath'
-    config.attempt_multi_page = multi_page
+    if xpath_located:
+        config.xpath_wait_for_loaded = 'xpath_load'
+    if xpath_next:
+        config.xpath_next_button = 'xpath_next'
+    if wait_for_load:
+        config.wait_for_page_load_seconds = 5
 
     # Failed if We check the Config Directly
     with pytest.raises(exceptions.ScrapeConfigError):

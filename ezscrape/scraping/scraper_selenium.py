@@ -195,25 +195,41 @@ class SeleniumChromeScraper(core.Scraper):
                 result = self._scrape_with_browser(browser)
         return result
 
-    @classmethod
-    def _validate_config(cls, config: core.ScrapeConfig) -> None:
-        """Verify the config can be scraped by requests."""
-        # TODO - THIS NEEDS REFACTORING, WE SHOULD SUPPORT EXPLICIT WAIT AS WELL
-        # TODO - WE SHOULD BE ABLE TO HANDLE EVERYTHING IN HERE
-        if not config.xpath_next_button:
-            raise exceptions.ScrapeConfigError(
-                'Selenium needs and Xpath Element Specified')
-
     def _scrape_with_browser(self, browser=None) -> core.ScrapeResult:
         """Scrape using Selenium with Chrome."""
         # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
         result = core.ScrapeResult(self.config.url)
-        multi_page = self.config.attempt_multi_page
         count = 0
 
+        # No Default Waiting Condition = wait for load timeout
+        wait_conditions = []
+
+        # Add a waiting Condition
+        next_button_condition = None
+        if self.config.xpath_next_button:
+            next_button_condition = WaitCondition(
+                (By.XPATH, self.config.xpath_next_button),
+                WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_CLICKABLE)
+            wait_conditions.append(next_button_condition)
+        
+        if self.config.xpath_wait_for_loaded:
+            wait_conditions.append(WaitCondition(
+                (By.XPATH, self.config.xpath_next_button),
+                WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
+
+        # Figure out if we need to wait for anything
+        scraper_wait = ScraperWait(wait_conditions)
+
+        if self.config.wait_for_page_load_seconds > 0:
+            browser.set_page_load_timeout(self.config.wait_for_page_load_seconds)
+            print(F'{datetime.datetime.now()} - set set_page_load_timeout to {self.config.wait_for_page_load_seconds}')
+        
         try:
+            print(F'{datetime.datetime.now()} - Start Get Url')
             browser.get(self.config.url)
+            print(F'{datetime.datetime.now()} - Finish Get Url')
         except WebDriverException as error:
+            print(F'{datetime.datetime.now()} - WebDriverException')
             result.status = core.ScrapeStatus.ERROR
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
         else:
@@ -222,54 +238,39 @@ class SeleniumChromeScraper(core.Scraper):
                 # SOME PAGE LOAD INFO AND TIPS if there are issues
                 # http://www.obeythetestinggoat.com/how-to-get-selenium-to-wait-for-page-load-after-a-click.html
 
-                # No Default Waiting Condition = wait for load timeout
-                wait_conditions = []
-
-                # Add a waiting Condition
-                if self.config.xpath_next_button:
-                    next_button_condition = browser.WaitCondition(
-                        (By.XPATH, self.config.xpath_next_button),
-                        WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_CLICKABLE)
-                    wait_conditions.append(next_button_condition)
-
-                if self.config.xpath_wait_for_loaded:
-                    wait_conditions.append(browser.WaitCondition(
-                        (By.XPATH, self.config.xpath_next_button),
-                        WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
-
-                scraper_wait = ScraperWait(wait_conditions)
-
-                time = datetime.datetime.now()
                 try:
+                    print(F'{datetime.datetime.now()} - Start Explicit wait')
                     element = WebDriverWait(
                         browser, self.config.request_timeout).until(scraper_wait)
+                    print(F'{datetime.datetime.now()} - Finish Explicit wait')
                 except TimeoutException as error:
+                    print(F'{datetime.datetime.now()} - TimeoutException')
                     result.status = core.ScrapeStatus.TIMEOUT
                     # TODO - Maybe this should be an error and success state for each sub page
                     #result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
-                    timediff = datetime.datetime.now() - time
-                    scrape_time = (timediff.total_seconds() * 1000 +
-                                   timediff.microseconds / 1000)
                     result.add_scrape_page(browser.page_source,
-                                           scrape_time=scrape_time,
                                            status=core.ScrapeStatus.TIMEOUT)
                     result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
                     break
                 else:
+                    print(F'{datetime.datetime.now()} - OK else block')
                     result.status = core.ScrapeStatus.SUCCESS
-                    timediff = datetime.datetime.now() - time
-                    scrape_time = (timediff.total_seconds() * 1000 +
-                                   timediff.microseconds / 1000)
+
+                    print(F'Found Elements: {scraper_wait.found_elements}')
+
                     result.add_scrape_page(browser.page_source,
-                                           scrape_time=scrape_time,
                                            status=core.ScrapeStatus.SUCCESS)
+                    print(F'{datetime.datetime.now()} - Stored HTML')
 
                     if count >= self.config.max_pages:
                         logger.debug(F'Paging limit of {self.config.max_pages} reached, stop scraping')
                         break
 
                     # If Next Button Found Press
-                    if next_button_condition.id() in scraper_wait.found_elements:
+                    if (next_button_condition is not None) and\
+                       (next_button_condition.id() in scraper_wait.found_elements):
+                    
+                        print('Clicking Next Button')
                         scraper_wait.found_elements[next_button_condition.id()].click()
                     else:
                         break
