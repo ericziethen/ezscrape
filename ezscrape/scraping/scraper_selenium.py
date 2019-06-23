@@ -220,9 +220,6 @@ class SeleniumChromeScraper(core.Scraper):
                 (By.XPATH, self.config.xpath_wait_for_loaded),
                 WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
 
-        # Figure out if we need to wait for anything
-        scraper_wait = ScraperWait(wait_conditions)
-
         if self.config.wait_for_page_load_seconds > 0:
             browser.set_page_load_timeout(self.config.wait_for_page_load_seconds)
             print(F'{datetime.datetime.now()} - set set_page_load_timeout to {self.config.wait_for_page_load_seconds}')
@@ -239,6 +236,10 @@ class SeleniumChromeScraper(core.Scraper):
             while True:
                 count += 1
                 print(F'### Page Load Count: {count}')
+
+                # Initialize the Scraper Wait object for each iteration / page,
+                # because it stores found elements
+                scraper_wait = ScraperWait(wait_conditions)
 
                 # SOME PAGE LOAD INFO AND TIPS if there are issues
                 # http://www.obeythetestinggoat.com/how-to-get-selenium-to-wait-for-page-load-after-a-click.html
@@ -285,7 +286,7 @@ class SeleniumChromeScraper(core.Scraper):
                         
 
                         # TODO - We need to clear the found elements to search for them again
-                        scraper_wait.found_elements = {}
+                        #scraper_wait.found_elements = {}
 
                         #browser.implicitly_wait(5)
                         print(F'Clicking Next Button: {next_elem}')

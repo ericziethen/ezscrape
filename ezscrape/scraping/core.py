@@ -12,7 +12,7 @@ import scraping.exceptions as exceptions
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 DEFAULT_REQUEST_TIMEOUT = 5.0
-DEFAULT_MAX_PAGES = 15
+DEFAULT_MAX_PAGES = 15  # TODO - Maybe this should be 2 and if needed more need to be explicit
 
 
 @enum.unique
@@ -41,6 +41,7 @@ class ScrapeConfig():
         self.proxy_https = ''
         self.useragent = None
         self.max_pages = DEFAULT_MAX_PAGES
+        # TODO - Think if we have some sort of sub structure, or type for next button e.g. xpath to stay flexible in the future
         self.xpath_next_button = ''
         self.xpath_wait_for_loaded = ''
         self.wait_for_page_load_seconds = 0
