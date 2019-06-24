@@ -39,8 +39,8 @@ class WaitForPageElem():
     """Class to define how to wait for a page."""
 
     def __init__(self, wait_type: WaitForPageType, wait_text: str):
-        self._wait_text = wait_text
-        self._wait_type = wait_type
+        self.wait_text = wait_text
+        self.wait_type = wait_type
 
     @property
     def wait_text(self) -> str:
