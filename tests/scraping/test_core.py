@@ -4,6 +4,35 @@ import scraping.core as core
 import scraping.exceptions as exceptions
 
 
+def test_WaitForPageLoad_ok():
+    core.WaitForPageLoad('', core.WaitForPageElem.XPATH)
+    core.WaitForPageLoad('xpath-text', core.WaitForPageElem.XPATH)
+
+
+def test_WaitForPageLoad_invalid_text():
+    with pytest.raises(ValueError):
+        core.WaitForPageLoad(15, core.WaitForPageElem.XPATH)
+
+    with pytest.raises(ValueError):
+        core.WaitForPageLoad(None, core.WaitForPageElem.XPATH)
+
+    elem = core.WaitForPageLoad('', core.WaitForPageElem.XPATH)
+    with pytest.raises(ValueError):
+        elem.wait_text = 15
+
+
+def test_WaitForPageLoad_invalid_type():
+    with pytest.raises(ValueError):
+        core.WaitForPageLoad('', 15)
+
+    with pytest.raises(ValueError):
+        core.WaitForPageLoad('', None)
+
+    elem = core.WaitForPageLoad('', core.WaitForPageElem.XPATH)
+    with pytest.raises(ValueError):
+        elem.wait_type = 15
+
+
 def test_scrape_config_default_values_set():
     url = 'fake_url'
     config = core.ScrapeConfig(url)

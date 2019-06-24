@@ -5,7 +5,7 @@
 import enum
 import logging
 
-from typing import Iterator, List
+from typing import Iterator, List, Optional
 
 import scraping.exceptions as exceptions
 
@@ -27,6 +27,44 @@ class ScrapeStatus(enum.Enum):
     PROXY_ERROR = 'Proxy Error'
 
 
+@enum.unique
+class WaitForPageElem(enum.Enum):
+    """Enum for Wait for page types."""
+
+    # pylint: disable=invalid-name
+    XPATH = 'xpath'
+
+
+class WaitForPageLoad():
+    """Class to define how to wait for a page."""
+
+    def __init__(self, wait_text: str, wait_type: WaitForPageElem):
+        self.wait_text = wait_text
+        self.wait_type = wait_type
+
+    @property
+    def wait_text(self) -> str:
+        """Property to define the wait_text attribute."""
+        return self._wait_text
+
+    @wait_text.setter
+    def wait_text(self, new_wait_text: str) -> None:
+        """Setter for the wait_text attribute."""
+        if type(new_wait_text) != str:
+            raise ValueError('wait_text need to be a valid str')
+
+    @property
+    def wait_type(self) -> WaitForPageElem:
+        """Property to define the wait_type attribute."""
+        return self._wait_type
+
+    @wait_type.setter
+    def wait_type(self, new_wait_type: str) -> None:
+        """Setter for the wait_type attribute."""
+        if type(new_wait_type) != WaitForPageElem:
+            raise ValueError('wait_type need to be a valid str')
+
+
 class ScrapeConfig():
     """Class to hold scrape config data needed for downloading the html."""
 
@@ -41,10 +79,15 @@ class ScrapeConfig():
         self.proxy_https = ''
         self.useragent = None
         self.max_pages = DEFAULT_MAX_PAGES
+
+        # TODO - !!! THIS REPLACES THE XPATH HARDCODED STUFF
+        self.next_button: Optional[WaitForPageLoad] = None
+        self.wait_for_elem_list: List[WaitForPageLoad] = []
+
         # TODO - Think if we have some sort of sub structure, or type for next button e.g. xpath to stay flexible in the future
-        self.xpath_next_button = ''
-        self.xpath_wait_for_loaded = ''
-        self.wait_for_page_load_seconds = 0
+        #self.xpath_next_button = ''
+        #self.xpath_wait_for_loaded = ''
+        self.page_load_timeout = 0
 
     @property
     def url(self) -> str:
@@ -82,9 +125,6 @@ class ScrapeResult():
 
         self.url = url
         self.caller_ip = None
-
-        # TODO - Status should be (_scrape_pages > 0) and (not error_msg)
-        # TODO - Or some other logic
         self.status: ScrapeStatus = ScrapeStatus.UNKNOWN
         self.error_msg = ''
 

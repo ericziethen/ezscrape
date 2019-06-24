@@ -208,21 +208,28 @@ class SeleniumChromeScraper(core.Scraper):
         wait_conditions = []
 
         # Add a waiting Condition
+        # TODO - LOOKUP GENERIC NEXT BUTTON OPTION
         next_button_condition = None
-        if self.config.xpath_next_button:
+        next_bttn = self.config.next_button
+        if next_bttn is not None:
             next_button_condition = WaitCondition(
-                (By.XPATH, self.config.xpath_next_button),
+                (get_by_type_from_page_wait_element(
+                    next_bttn.wait_type), next_bttn.wait_text),
                 WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_CLICKABLE)
             wait_conditions.append(next_button_condition)
-        
+
+
+
+        # TODO - SUPPORT MULTIPLE WAIT ELEMENTS
+        !!! FINISH ME, SUPPORT MULTIPLE CONDITIONS
         if self.config.xpath_wait_for_loaded:
             wait_conditions.append(WaitCondition(
                 (By.XPATH, self.config.xpath_wait_for_loaded),
                 WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
 
-        if self.config.wait_for_page_load_seconds > 0:
-            browser.set_page_load_timeout(self.config.wait_for_page_load_seconds)
-            print(F'{datetime.datetime.now()} - set set_page_load_timeout to {self.config.wait_for_page_load_seconds}')
+        if self.config.page_load_timeout > 0:
+            browser.set_page_load_timeout(self.config.page_load_timeout)
+            print(F'{datetime.datetime.now()} - set set_page_load_timeout to {self.config.page_load_timeout}')
         
         try:
             print(F'{datetime.datetime.now()} - Start Get Url')
@@ -302,3 +309,9 @@ class SeleniumChromeScraper(core.Scraper):
         return result
 
 
+def get_by_type_from_page_wait_element(
+    wait_element: core.WaitForPageElem) -> By:
+    if wait_element == core.WaitForPageElem.XPATH:
+        return By.XPATH
+    else:
+        raise ValueError(F'Wait Element "{wait_element}" not supported')

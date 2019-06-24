@@ -32,6 +32,25 @@ def test_selenium_scraper_invalid_config():
         scraper_selenium.SeleniumChromeScraper(config)
 
 
+@pytest.mark.eric
+def test_get_by_type_from_page_wait_element_all_handled():
+    for element in core.WaitForPageElem:
+        scraper_selenium.get_by_type_from_page_wait_element(element)
+
+
+WAIT_TYPE_TO_BY_TYPE_GOOD = [
+    (core.WaitForPageElem.XPATH, By.XPATH)
+]
+@pytest.mark.parametrize('wait_type, expected_by_type', WAIT_TYPE_TO_BY_TYPE_GOOD)
+def test_get_by_type_from_page_wait_element(wait_type, expected_by_type):
+    assert scraper_selenium.get_by_type_from_page_wait_element(wait_type) == expected_by_type
+
+
+def test_get_by_type_from_page_wait_element_invalid():
+    with pytest.raises(ValueError):
+        scraper_selenium.get_by_type_from_page_wait_element('invalid')
+
+
 SELENIUM_CHROME_GOOD_URLS_SINGLE_PAGE = [
     (common.URL_SINGLE_PAGE_JS, True),
     (common.URL_SINGLE_PAGE_JS_DELAYED, True),
@@ -63,11 +82,11 @@ def test_selenium_scraper_scrape_ok_single_page(url, javascript):
 
 @pytest.mark.slow
 @pytest.mark.selenium
-def test_selenium_scraper_wait_for_page_load_seconds_not_enough_time():
+def test_selenium_scraper_page_load_timeout_not_enough_time():
     config = core.ScrapeConfig(common.URL_SINGLE_PAGE_JS_DELAYED)
     # URL_SINGLE_PAGE_JS_DELAYED has 3 seconds load time for JS
     config.request_timeout = 10
-    config.wait_for_page_load_seconds = 2
+    config.page_load_timeout = 2
 
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
@@ -76,11 +95,11 @@ def test_selenium_scraper_wait_for_page_load_seconds_not_enough_time():
 
 @pytest.mark.slow
 @pytest.mark.selenium
-def test_selenium_scraper_wait_for_page_load_seconds_enough_time():
+def test_selenium_scraper_page_load_timeout_enough_time():
     config = core.ScrapeConfig(common.URL_SINGLE_PAGE_JS_DELAYED)
     # URL_SINGLE_PAGE_JS_DELAYED has 3 seconds load time for JS
     config.request_timeout = 10
-    config.wait_for_page_load_seconds = 8
+    config.page_load_timeout = 8
 
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
