@@ -4,31 +4,31 @@ import scraping.core as core
 import scraping.exceptions as exceptions
 
 
-def test_WaitForPageLoad_ok():
-    core.WaitForPageLoad('', core.WaitForPageElem.XPATH)
-    core.WaitForPageLoad('xpath-text', core.WaitForPageElem.XPATH)
+def test_WaitForPageElem_ok():
+    core.WaitForPageElem(core.WaitForPageType.XPATH, '')
+    core.WaitForPageElem(core.WaitForPageType.XPATH, 'xpath-text')
 
 
-def test_WaitForPageLoad_invalid_text():
+def test_WaitForPageElem_invalid_text():
     with pytest.raises(ValueError):
-        core.WaitForPageLoad(15, core.WaitForPageElem.XPATH)
+        core.WaitForPageElem(core.WaitForPageType.XPATH, 15)
 
     with pytest.raises(ValueError):
-        core.WaitForPageLoad(None, core.WaitForPageElem.XPATH)
+        core.WaitForPageElem(core.WaitForPageType.XPATH, None)
 
-    elem = core.WaitForPageLoad('', core.WaitForPageElem.XPATH)
+    elem = core.WaitForPageElem(core.WaitForPageType.XPATH, '')
     with pytest.raises(ValueError):
         elem.wait_text = 15
 
 
-def test_WaitForPageLoad_invalid_type():
+def test_WaitForPageElem_invalid_type():
     with pytest.raises(ValueError):
-        core.WaitForPageLoad('', 15)
+        core.WaitForPageElem(15, '')
 
     with pytest.raises(ValueError):
-        core.WaitForPageLoad('', None)
+        core.WaitForPageElem(None, '')
 
-    elem = core.WaitForPageLoad('', core.WaitForPageElem.XPATH)
+    elem = core.WaitForPageElem(core.WaitForPageType.XPATH, '')
     with pytest.raises(ValueError):
         elem.wait_type = 15
 
@@ -43,7 +43,8 @@ def test_scrape_config_default_values_set():
     assert not config.proxy_http
     assert not config.proxy_https
     assert config.useragent is None
-    assert not config.xpath_next_button
+    assert not config.wait_for_elem_list
+    assert config.next_button == None
 
 
 @pytest.mark.parametrize('invalid_url', [None, '', 15])

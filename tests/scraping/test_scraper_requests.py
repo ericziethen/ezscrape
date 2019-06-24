@@ -24,10 +24,12 @@ REQUESTS_BAD_CONFIG = [
 @pytest.mark.parametrize('xpath_located, xpath_next, wait_for_load', REQUESTS_BAD_CONFIG)
 def test_requests_scraper_invalid_config(xpath_located, xpath_next, wait_for_load):
     config = core.ScrapeConfig('url')
+
     if xpath_located:
-        config.xpath_wait_for_loaded = 'xpath_load'
+        config.wait_for_elem_list.append(
+            core.WaitForPageElem(core.WaitForPageType.XPATH, 'xpath_load'))
     if xpath_next:
-        config.xpath_next_button = 'xpath_next'
+        config.next_button = core.WaitForPageElem(core.WaitForPageType.XPATH, 'xpath_next')
     if wait_for_load:
         config.page_load_timeout = 5
 

@@ -207,8 +207,7 @@ class SeleniumChromeScraper(core.Scraper):
         # No Default Waiting Condition = wait for load timeout
         wait_conditions = []
 
-        # Add a waiting Condition
-        # TODO - LOOKUP GENERIC NEXT BUTTON OPTION
+        # Add Next Button
         next_button_condition = None
         next_bttn = self.config.next_button
         if next_bttn is not None:
@@ -218,13 +217,10 @@ class SeleniumChromeScraper(core.Scraper):
                 WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_CLICKABLE)
             wait_conditions.append(next_button_condition)
 
-
-
-        # TODO - SUPPORT MULTIPLE WAIT ELEMENTS
-        !!! FINISH ME, SUPPORT MULTIPLE CONDITIONS
-        if self.config.xpath_wait_for_loaded:
+        # Add Generic Wait Conditions
+        for wait_elem in self.config.wait_for_elem_list:
             wait_conditions.append(WaitCondition(
-                (By.XPATH, self.config.xpath_wait_for_loaded),
+                (wait_elem.wait_type, wait_elem.wait_text),
                 WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
 
         if self.config.page_load_timeout > 0:
@@ -310,8 +306,8 @@ class SeleniumChromeScraper(core.Scraper):
 
 
 def get_by_type_from_page_wait_element(
-    wait_element: core.WaitForPageElem) -> By:
-    if wait_element == core.WaitForPageElem.XPATH:
+    wait_element: core.WaitForPageType) -> By:
+    if wait_element == core.WaitForPageType.XPATH:
         return By.XPATH
     else:
         raise ValueError(F'Wait Element "{wait_element}" not supported')

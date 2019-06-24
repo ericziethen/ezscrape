@@ -28,19 +28,19 @@ class ScrapeStatus(enum.Enum):
 
 
 @enum.unique
-class WaitForPageElem(enum.Enum):
+class WaitForPageType(enum.Enum):
     """Enum for Wait for page types."""
 
     # pylint: disable=invalid-name
     XPATH = 'xpath'
 
 
-class WaitForPageLoad():
+class WaitForPageElem():
     """Class to define how to wait for a page."""
 
-    def __init__(self, wait_text: str, wait_type: WaitForPageElem):
-        self.wait_text = wait_text
-        self.wait_type = wait_type
+    def __init__(self, wait_type: WaitForPageType, wait_text: str):
+        self._wait_text = wait_text
+        self._wait_type = wait_type
 
     @property
     def wait_text(self) -> str:
@@ -52,18 +52,19 @@ class WaitForPageLoad():
         """Setter for the wait_text attribute."""
         if type(new_wait_text) != str:
             raise ValueError('wait_text need to be a valid str')
+        self._wait_text = new_wait_text
 
     @property
-    def wait_type(self) -> WaitForPageElem:
+    def wait_type(self) -> WaitForPageType:
         """Property to define the wait_type attribute."""
         return self._wait_type
 
     @wait_type.setter
-    def wait_type(self, new_wait_type: str) -> None:
+    def wait_type(self, new_wait_type: WaitForPageType) -> None:
         """Setter for the wait_type attribute."""
-        if type(new_wait_type) != WaitForPageElem:
+        if type(new_wait_type) != WaitForPageType:
             raise ValueError('wait_type need to be a valid str')
-
+        self._wait_type = new_wait_type
 
 class ScrapeConfig():
     """Class to hold scrape config data needed for downloading the html."""
@@ -80,14 +81,11 @@ class ScrapeConfig():
         self.useragent = None
         self.max_pages = DEFAULT_MAX_PAGES
 
-        # TODO - !!! THIS REPLACES THE XPATH HARDCODED STUFF
-        self.next_button: Optional[WaitForPageLoad] = None
-        self.wait_for_elem_list: List[WaitForPageLoad] = []
+        self.next_button: Optional[WaitForPageElem] = None
+        self.wait_for_elem_list: List[WaitForPageElem] = []
 
-        # TODO - Think if we have some sort of sub structure, or type for next button e.g. xpath to stay flexible in the future
-        #self.xpath_next_button = ''
-        #self.xpath_wait_for_loaded = ''
         self.page_load_timeout = 0
+
 
     @property
     def url(self) -> str:

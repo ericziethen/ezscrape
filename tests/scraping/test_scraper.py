@@ -29,7 +29,10 @@ def test_scrape_url_scraper_no_js():
 def test_scrape_url_scraper_js():
     url = common.URL_SINGLE_PAGE_JS
     config = core.ScrapeConfig(url)
-    config.xpath_wait_for_loaded = '''//p[@id='wait-text']'''
+
+    config.wait_for_elem_list.append(
+        core.WaitForPageElem(core.WaitForPageType.XPATH, '''//p[@id='wait-text']'''))
+
     result = scraper.scrape_url(config)
 
     assert result.url == url

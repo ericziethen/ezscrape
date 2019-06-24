@@ -99,10 +99,13 @@ class RequestsScraper(core.Scraper):
     def _validate_config(cls, config: core.ScrapeConfig) -> None:
         """Verify the config can be scraped by requests."""
 
-        # TODO - NEW CHECKS NEEDED FOR NEW ABSTRACT VERSION
-        if config.xpath_next_button or config.xpath_wait_for_loaded:
+        if config.next_button is not None:
             raise exceptions.ScrapeConfigError(
-                'No Support for waiting for xpath Elements to be loaded')
+                'No Support for multi page next buttons')
+
+        if config.wait_for_elem_list:
+            raise exceptions.ScrapeConfigError(
+                'No Support for waiting for page elements to load')
 
         if config.page_load_timeout > 0:
             raise exceptions.ScrapeConfigError(

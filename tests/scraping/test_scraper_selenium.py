@@ -34,12 +34,12 @@ def test_selenium_scraper_invalid_config():
 
 @pytest.mark.eric
 def test_get_by_type_from_page_wait_element_all_handled():
-    for element in core.WaitForPageElem:
+    for element in core.WaitForPageType:
         scraper_selenium.get_by_type_from_page_wait_element(element)
 
 
 WAIT_TYPE_TO_BY_TYPE_GOOD = [
-    (core.WaitForPageElem.XPATH, By.XPATH)
+    (core.WaitForPageType.XPATH, By.XPATH)
 ]
 @pytest.mark.parametrize('wait_type, expected_by_type', WAIT_TYPE_TO_BY_TYPE_GOOD)
 def test_get_by_type_from_page_wait_element(wait_type, expected_by_type):
@@ -115,7 +115,8 @@ def test_selenium_scraper_page_load_timeout_enough_time():
 @pytest.mark.selenium
 def test_selenium_scraper_scrape_paging():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01)
-    config.xpath_next_button = R'''//a[@title='next' and @class='enabled']'''
+    config.next_button = core.WaitForPageElem(
+        core.WaitForPageType.XPATH, R'''//a[@title='next' and @class='enabled']''')
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
     assert len(result) == 2
 
@@ -131,7 +132,8 @@ def test_selenium_scraper_scrape_paging():
 @pytest.mark.selenium
 def test_selenium_chrome_good_scrape_max_next_page_reached():
     config = core.ScrapeConfig(common.URL_MULTI_PAGE_JS_STATIC_LINKS_01)
-    config.xpath_next_button = '''//a[@title='next']'''
+    config.next_button = core.WaitForPageElem(
+        core.WaitForPageType.XPATH, '''//a[@title='next']''')
     config.request_timeout = 2
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
     assert len(result) == core.DEFAULT_MAX_PAGES
@@ -171,7 +173,8 @@ def test_selenium_invalid_url():
 def test_selenium_url_not_reachable():
     config = core.ScrapeConfig(common.URL_URL_NOT_ONLINE)
     config.request_timeout = 3
-    config.xpath_wait_for_loaded = 'invalid-xpath'
+    config.wait_for_elem_list.append(
+        core.WaitForPageElem(core.WaitForPageType.XPATH, 'invalid-xpath'))
  
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
@@ -184,7 +187,9 @@ def test_selenium_url_not_reachable():
 def test_selenium_scrape_timeout():
     config = core.ScrapeConfig(common.URL_TIMEOUT)
     config.request_timeout = 2
-    config.xpath_wait_for_loaded = 'invalid-xpath'
+
+    config.wait_for_elem_list.append(
+        core.WaitForPageElem(core.WaitForPageType.XPATH, 'invalid-xpath'))
 
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
     assert not result
