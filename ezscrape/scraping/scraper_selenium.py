@@ -223,9 +223,9 @@ class SeleniumChromeScraper(core.Scraper):
                 (wait_elem.wait_type, wait_elem.wait_text),
                 WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
 
-        if self.config.page_load_timeout > 0:
-            browser.set_page_load_timeout(self.config.page_load_timeout)
-            print(F'{datetime.datetime.now()} - set set_page_load_timeout to {self.config.page_load_timeout}')
+        if self.config.page_load_wait > 0:
+            browser.set_page_load_wait(self.config.page_load_wait)
+            print(F'{datetime.datetime.now()} - set set_page_load_wait to {self.config.page_load_wait}')
         
         try:
             print(F'{datetime.datetime.now()} - Start Get Url')

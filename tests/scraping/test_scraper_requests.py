@@ -31,7 +31,7 @@ def test_requests_scraper_invalid_config(xpath_located, xpath_next, wait_for_loa
     if xpath_next:
         config.next_button = core.WaitForPageElem(core.WaitForPageType.XPATH, 'xpath_next')
     if wait_for_load:
-        config.page_load_timeout = 5
+        config.page_load_wait = 5
 
     # Failed if We check the Config Directly
     with pytest.raises(exceptions.ScrapeConfigError):

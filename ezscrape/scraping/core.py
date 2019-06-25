@@ -12,7 +12,7 @@ import scraping.exceptions as exceptions
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 DEFAULT_REQUEST_TIMEOUT = 5.0
-DEFAULT_MAX_PAGES = 15  # TODO - Maybe this should be 2 and if needed more need to be explicit
+DEFAULT_MAX_PAGES = 15
 
 
 @enum.unique
@@ -39,6 +39,7 @@ class WaitForPageElem():
     """Class to define how to wait for a page."""
 
     def __init__(self, wait_type: WaitForPageType, wait_text: str):
+        """Set up the Wait Element."""
         self.wait_text = wait_text
         self.wait_type = wait_type
 
@@ -50,9 +51,11 @@ class WaitForPageElem():
     @wait_text.setter
     def wait_text(self, new_wait_text: str) -> None:
         """Setter for the wait_text attribute."""
-        if type(new_wait_text) != str:
+        if not isinstance(new_wait_text, str):
             raise ValueError('wait_text need to be a valid str')
+        # pylint: disable=attribute-defined-outside-init
         self._wait_text = new_wait_text
+        # pylint: enable=attribute-defined-outside-init
 
     @property
     def wait_type(self) -> WaitForPageType:
@@ -62,20 +65,23 @@ class WaitForPageElem():
     @wait_type.setter
     def wait_type(self, new_wait_type: WaitForPageType) -> None:
         """Setter for the wait_type attribute."""
-        if type(new_wait_type) != WaitForPageType:
+        if not isinstance(new_wait_type, WaitForPageType):
             raise ValueError('wait_type need to be a valid str')
+        # pylint: disable=attribute-defined-outside-init
         self._wait_type = new_wait_type
+        # pylint: enable=attribute-defined-outside-init
+
 
 class ScrapeConfig():
     """Class to hold scrape config data needed for downloading the html."""
 
     def __init__(self, url: str):
         """Initialize a default scrape config with the given url."""
-        # TODO - FOr Simplification, maybe pass some arguments through init with defaults
-        # TODO - and have functions for others like proxy, useragent...
-        # TODO - otherwise document each and purpose
         self.url = url
+
         self.request_timeout = DEFAULT_REQUEST_TIMEOUT
+        self.page_load_wait = 0
+
         self.proxy_http = ''
         self.proxy_https = ''
         self.useragent = None
@@ -83,9 +89,6 @@ class ScrapeConfig():
 
         self.next_button: Optional[WaitForPageElem] = None
         self.wait_for_elem_list: List[WaitForPageElem] = []
-
-        self.page_load_timeout = 0
-
 
     @property
     def url(self) -> str:

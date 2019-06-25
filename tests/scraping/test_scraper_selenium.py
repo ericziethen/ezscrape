@@ -82,11 +82,11 @@ def test_selenium_scraper_scrape_ok_single_page(url, javascript):
 
 @pytest.mark.slow
 @pytest.mark.selenium
-def test_selenium_scraper_page_load_timeout_not_enough_time():
+def test_selenium_scraper_page_load_wait_not_enough_time():
     config = core.ScrapeConfig(common.URL_SINGLE_PAGE_JS_DELAYED)
     # URL_SINGLE_PAGE_JS_DELAYED has 3 seconds load time for JS
     config.request_timeout = 10
-    config.page_load_timeout = 2
+    config.page_load_wait = 2
 
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 
@@ -95,11 +95,11 @@ def test_selenium_scraper_page_load_timeout_not_enough_time():
 
 @pytest.mark.slow
 @pytest.mark.selenium
-def test_selenium_scraper_page_load_timeout_enough_time():
+def test_selenium_scraper_page_load_wait_enough_time():
     config = core.ScrapeConfig(common.URL_SINGLE_PAGE_JS_DELAYED)
     # URL_SINGLE_PAGE_JS_DELAYED has 3 seconds load time for JS
     config.request_timeout = 10
-    config.page_load_timeout = 8
+    config.page_load_wait = 8
 
     result = scraper_selenium.SeleniumChromeScraper(config).scrape()
 

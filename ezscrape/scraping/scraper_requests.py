@@ -98,7 +98,6 @@ class RequestsScraper(core.Scraper):
     @classmethod
     def _validate_config(cls, config: core.ScrapeConfig) -> None:
         """Verify the config can be scraped by requests."""
-
         if config.next_button is not None:
             raise exceptions.ScrapeConfigError(
                 'No Support for multi page next buttons')
@@ -107,6 +106,6 @@ class RequestsScraper(core.Scraper):
             raise exceptions.ScrapeConfigError(
                 'No Support for waiting for page elements to load')
 
-        if config.page_load_timeout > 0:
+        if config.page_load_wait > 0:
             raise exceptions.ScrapeConfigError(
                 'No Support for waiting for page load')
