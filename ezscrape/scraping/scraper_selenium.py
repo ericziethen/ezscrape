@@ -9,17 +9,18 @@ import logging
 import os
 
 from dataclasses import dataclass
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 from selenium.common.exceptions import (
-    NoSuchElementException, StaleElementReferenceException, TimeoutException, WebDriverException)
+    NoSuchElementException, TimeoutException, WebDriverException)
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 import scraping.core as core
-import scraping.exceptions as exceptions
 import scraping.web_lib as web_lib
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
@@ -51,11 +52,14 @@ class WaitType(enum.Enum):
 
 @dataclass
 class WaitCondition():
+    """Define a Wait Condition."""
+
     locator: Tuple[By, str]
     wait_logic: WaitLogic = WaitLogic.MUST_HAVE
     wait_type: WaitType = WaitType.WAIT_FOR_LOCATED
 
-    def id(self):
+    @property
+    def key(self) -> str:
         """Provide the Id of this Element."""
         return str(self)
 
@@ -65,18 +69,18 @@ class ScraperWait():
 
     def __init__(self, conditions: List[WaitCondition]):
         """Initialize the Waiter object."""
-        # TODO - Maybe have setter to check Conditions are Valid (unique IDs?)
         self._conditions = conditions
         print(F'ScraperWait_init, conditions: {conditions}')
-        self.found_elements = {}
+        self.found_elements: Dict[str, WebElement] = {}
         self._found_might_have_count = 0
         self._found_must_have_count = 0
 
-    def __call__(self, driver):
+    def __call__(self, driver: RemoteWebDriver) -> Union[bool, WebElement]:
+        """Handle Object Calls."""
         # Test all outstanding events
         must_have_ok = True
         for cond in self._conditions:
-            if cond.id() not in self.found_elements:
+            if cond.key not in self.found_elements:
                 elem = None
                 if cond.wait_type == WaitType.WAIT_FOR_CLICKABLE:
                     elem = self._find_element(
@@ -89,7 +93,7 @@ class ScraperWait():
                     must_have_ok = False
 
                 if elem is not None:
-                    self.found_elements[cond.id()] = elem
+                    self.found_elements[cond.key] = elem
                     if cond.wait_logic == WaitLogic.OPTIONAL:
                         self._found_might_have_count += 1
                     elif cond.wait_logic == WaitLogic.MUST_HAVE:
@@ -108,11 +112,12 @@ class ScraperWait():
         # We haven't found an element fulfilling our conditions
         return False
 
-
-
     @staticmethod
-    def _find_element(driver, locator, *,
-                      visible: bool = False, enabled: bool = False):
+    def _find_element(driver: RemoteWebDriver,
+                      locator,
+                      *,
+                      visible: bool = False,
+                      enabled: bool = False) -> WebElement:
         found_elem = None
         print(F'_find_element(): Locator: {locator}, visible: {visible}, enabled: {enabled}')
         try:
@@ -132,16 +137,17 @@ class ScraperWait():
 # TODO - Can we write this as a normal Context Manager using __enter__?
 # TODO - There might be a reason we picked this but we need to comment if not possible
 @contextlib.contextmanager
-def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
+def SeleniumChromeSession(
+        *, config: Optional[core.ScrapeConfig] = None) -> None:
     """Context Manager wrapper for a Selenium Chrome Session."""
 
     # TODO - WHat was the reason to not use a ContextManager with __enter__ ...???
 
     # TODO - Support Chrome Portable Overwrite
-        # String chromePath = "M:/my/googlechromeporatble.exe path"; 
-        #   options.setBinary(chromepath);
-        #   System.setProperty("webdriver.chrome.driver",chromedriverpath);
-    #chrome_exec_var=
+    # String chromePath = "M:/my/googlechromeporatble.exe path";
+    #   options.setBinary(chromepath);
+    #   System.setProperty("webdriver.chrome.driver",chromedriverpath);
+    # chrome_exec_var=
 
     # TODO - The Module will probably come with a default Chrome Webdriver
     # TODO - IFFFFFF Different Versions work with different Versions of Chrome and
@@ -150,13 +156,11 @@ def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
     # TODO - ??? Config
     # TODO - ??? Env Variable
     # TODO - ??? Parameter
-    # TODO - 
     chrome_web_driver_path = os.environ.get(CHROME_WEBDRIVER_ENV_VAR)
     if chrome_web_driver_path is None:
         raise SeleniumSetupError((F'Webdriver not found, set path as env '
                                   F'Variable: "{CHROME_WEBDRIVER_ENV_VAR}"'))
 
-    # TODO - Is that still valid now that we have separate proxy settings?
     proxy = ''
     if config is not None:
         if config.url.startswith('https'):
@@ -164,7 +168,6 @@ def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
         elif config.url.startswith('http'):
             proxy = config.proxy_http
 
-    # TODO - Split the URL to get the correct schema
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument('--headless')
     chrome_options.add_argument(F'user-agent={web_lib.random_useragent()}')
@@ -176,29 +179,31 @@ def SeleniumChromeSession(*, config: core.ScrapeConfig = None):
 
     with webdriver.Chrome(
             chrome_options=chrome_options,
-            executable_path=chrome_web_driver_path) as browser:
+            executable_path=chrome_web_driver_path) as driver:
         print(F'BEFORE: {datetime.datetime.now()}')
-        yield (browser)
+        yield driver
         print(F'AFTER: {datetime.datetime.now()}')
 
 
 class SeleniumChromeScraper(core.Scraper):
     """Implement the Scraper using requests."""
-    def __init__(self, config: core.ScrapeConfig, *, browser=None):
+
+    def __init__(self, config: core.ScrapeConfig, *,
+                 driver: webdriver.Chrome = None):
         """Initialize the Selenium Scraper."""
         super().__init__(config)
-        self.browser = browser
+        self.driver = driver
 
     def scrape(self) -> core.ScrapeResult:
-        """Handle existing browser session or create a new one."""
-        if self.browser is not None:
-            result = self._scrape_with_browser(self.browser)
+        """Handle existing driver session or create a new one."""
+        if self.driver is not None:
+            result = self._scrape_with_driver(self.driver)
         else:
-            with SeleniumChromeSession() as browser:
-                result = self._scrape_with_browser(browser)
+            with SeleniumChromeSession() as driver:
+                result = self._scrape_with_driver(driver)
         return result
 
-    def _scrape_with_browser(self, browser=None) -> core.ScrapeResult:
+    def _scrape_with_driver(self, driver: webdriver.Chrome = None) -> core.ScrapeResult:
         """Scrape using Selenium with Chrome."""
         # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
         result = core.ScrapeResult(self.config.url)
@@ -224,12 +229,12 @@ class SeleniumChromeScraper(core.Scraper):
                 WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
 
         if self.config.page_load_wait > 0:
-            browser.set_page_load_wait(self.config.page_load_wait)
+            driver.set_page_load_wait(self.config.page_load_wait)
             print(F'{datetime.datetime.now()} - set set_page_load_wait to {self.config.page_load_wait}')
-        
+
         try:
             print(F'{datetime.datetime.now()} - Start Get Url')
-            browser.get(self.config.url)
+            driver.get(self.config.url)
             print(F'{datetime.datetime.now()} - Finish Get Url')
         except WebDriverException as error:
             print(F'{datetime.datetime.now()} - WebDriverException')
@@ -250,17 +255,16 @@ class SeleniumChromeScraper(core.Scraper):
                 try:
                     if wait_conditions:
                         print(F'{datetime.datetime.now()} - Start Explicit wait')
-                        element = WebDriverWait(
-                            browser, self.config.request_timeout).until(scraper_wait)
+                        WebDriverWait(
+                            driver,
+                            self.config.request_timeout).until(scraper_wait)
                         print(F'{datetime.datetime.now()} - Finish Explicit wait')
                     else:
                         print(F'{datetime.datetime.now()} - Skip Explicit wait, no Conditions')
                 except TimeoutException as error:
                     print(F'{datetime.datetime.now()} - TimeoutException')
                     result.status = core.ScrapeStatus.TIMEOUT
-                    # TODO - Maybe this should be an error and success state for each sub page
-                    #result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
-                    result.add_scrape_page(browser.page_source,
+                    result.add_scrape_page(driver.page_source,
                                            status=core.ScrapeStatus.TIMEOUT)
                     result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
                     break
@@ -270,7 +274,7 @@ class SeleniumChromeScraper(core.Scraper):
 
                     print(F'Found Elements: {scraper_wait.found_elements}')
 
-                    result.add_scrape_page(browser.page_source,
+                    result.add_scrape_page(driver.page_source,
                                            status=core.ScrapeStatus.SUCCESS)
                     print(F'{datetime.datetime.now()} - Stored HTML')
 
@@ -278,27 +282,13 @@ class SeleniumChromeScraper(core.Scraper):
                         logger.debug(F'Paging limit of {self.config.max_pages} reached, stop scraping')
                         break
 
-                    # TODO - We're getting some staleness issues here
-                    # TODO - See https://stackoverflow.com/questions/40029549/how-to-avoid-staleelementreferenceexception-in-selenium-python
-                    # TODO - For Ideas
                     # If Next Button Found Press
                     if (next_button_condition is not None) and\
-                       (next_button_condition.id() in scraper_wait.found_elements):
-                    
-                        next_elem = scraper_wait.found_elements[next_button_condition.id()]
-                        
+                       (next_button_condition.key in scraper_wait.found_elements):
+                        next_elem = scraper_wait.found_elements[next_button_condition.key]
 
-                        # TODO - We need to clear the found elements to search for them again
-                        #scraper_wait.found_elements = {}
-
-                        #browser.implicitly_wait(5)
                         print(F'Clicking Next Button: {next_elem}')
                         next_elem.click()
-
-                        # TODO - Some Ideas:
-                        # https://blog.codeship.com/get-selenium-to-wait-for-page-load/
-                        #WebDriverWait(browser, 10).until(EC.staleness_of(next_elem))
-                        #browser.wait.until(EC.staleness_of(next_elem))
                     else:
                         break
 
@@ -306,7 +296,8 @@ class SeleniumChromeScraper(core.Scraper):
 
 
 def get_by_type_from_page_wait_element(
-    wait_element: core.WaitForPageType) -> By:
+        wait_element: core.WaitForPageType) -> By:
+    """Convert WaitForPageType to Selenium By Type."""
     if wait_element == core.WaitForPageType.XPATH:
         return By.XPATH
     else:
