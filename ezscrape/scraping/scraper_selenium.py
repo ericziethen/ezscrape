@@ -9,7 +9,7 @@ import logging
 import os
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 from selenium.common.exceptions import (
     NoSuchElementException, TimeoutException, WebDriverException)
@@ -114,12 +114,11 @@ class ScraperWait():
 
     @staticmethod
     def _find_element(driver: RemoteWebDriver,
-                      locator,
+                      locator: Tuple[By, str],
                       *,
                       visible: bool = False,
                       enabled: bool = False) -> WebElement:
         found_elem = None
-        print(F'_find_element(): Locator: {locator}, visible: {visible}, enabled: {enabled}')
         try:
             candidate_elem = EC._find_element(driver, locator)
         except NoSuchElementException:
@@ -138,7 +137,7 @@ class ScraperWait():
 # TODO - There might be a reason we picked this but we need to comment if not possible
 @contextlib.contextmanager
 def SeleniumChromeSession(
-        *, config: Optional[core.ScrapeConfig] = None) -> None:
+        *, config: Optional[core.ScrapeConfig] = None) -> Iterator[RemoteWebDriver]:
     """Context Manager wrapper for a Selenium Chrome Session."""
 
     # TODO - WHat was the reason to not use a ContextManager with __enter__ ...???
@@ -254,40 +253,32 @@ class SeleniumChromeScraper(core.Scraper):
 
                 try:
                     if wait_conditions:
-                        print(F'{datetime.datetime.now()} - Start Explicit wait')
                         WebDriverWait(
                             driver,
                             self.config.request_timeout).until(scraper_wait)
-                        print(F'{datetime.datetime.now()} - Finish Explicit wait')
-                    else:
-                        print(F'{datetime.datetime.now()} - Skip Explicit wait, no Conditions')
                 except TimeoutException as error:
-                    print(F'{datetime.datetime.now()} - TimeoutException')
                     result.status = core.ScrapeStatus.TIMEOUT
                     result.add_scrape_page(driver.page_source,
                                            status=core.ScrapeStatus.TIMEOUT)
                     result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
                     break
                 else:
-                    print(F'{datetime.datetime.now()} - OK else block')
                     result.status = core.ScrapeStatus.SUCCESS
-
-                    print(F'Found Elements: {scraper_wait.found_elements}')
 
                     result.add_scrape_page(driver.page_source,
                                            status=core.ScrapeStatus.SUCCESS)
-                    print(F'{datetime.datetime.now()} - Stored HTML')
 
                     if count >= self.config.max_pages:
-                        logger.debug(F'Paging limit of {self.config.max_pages} reached, stop scraping')
+                        logger.debug(F'Paging limit of {self.config.max_pages}'
+                                     'reached, stop scraping')
                         break
 
                     # If Next Button Found Press
                     if (next_button_condition is not None) and\
                        (next_button_condition.key in scraper_wait.found_elements):
-                        next_elem = scraper_wait.found_elements[next_button_condition.key]
+                        next_elem = scraper_wait.found_elements[
+                            next_button_condition.key]
 
-                        print(F'Clicking Next Button: {next_elem}')
                         next_elem.click()
                     else:
                         break
