@@ -32,7 +32,6 @@ def test_selenium_scraper_invalid_config():
         scraper_selenium.SeleniumChromeScraper(config)
 
 
-@pytest.mark.eric
 def test_get_by_type_from_page_wait_element_all_handled():
     for element in core.WaitForPageType:
         scraper_selenium.get_by_type_from_page_wait_element(element)
@@ -149,7 +148,7 @@ def test_selenium_chrome_context_manager_good_scrape():
             javascript = url_tup[1]
 
             config = core.ScrapeConfig(url)
-            result = scraper_selenium.SeleniumChromeScraper(config, browser=chrome_session).scrape()
+            result = scraper_selenium.SeleniumChromeScraper(config, driver=chrome_session).scrape()
 
             page = result._scrape_pages[0].html
             if javascript:
@@ -313,9 +312,9 @@ def test_class_ScraperWait_1_of_2_might_haves():
         elem = WebDriverWait(chrome_session, 3).until(scraper_wait)
 
         assert elem is not None
-        assert good_cond.id() in scraper_wait.found_elements
+        assert good_cond.key in scraper_wait.found_elements
 
-        my_elem = scraper_wait.found_elements[good_cond.id()]
+        my_elem = scraper_wait.found_elements[good_cond.key]
         assert my_elem == elem
 
 

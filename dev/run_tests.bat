@@ -19,6 +19,7 @@ if "%1"=="travis-ci" (
 :local_setup
 rem TODO - Different Handling Needed
 set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\74.0.3729.6\win32\chromedriver.exe
+set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\75.0.3770.90\win32\chromedriver.exe
 echo ChromeDriver path set to "%CHROME_WEBDRIVER_PATH%"
 echo CHeck CHrome Driver Path Exists:
 dir "%CHROME_WEBDRIVER_PATH%"

@@ -120,7 +120,10 @@ class ScraperWait():
                       enabled: bool = False) -> WebElement:
         found_elem = None
         try:
-            candidate_elem = EC._find_element(driver, locator)
+            # TODO - Could we use driver.find_element(locator) here? hor some form
+            print(F'Find Element by: "{locator}"')
+            candidate_elem = driver.find_element(locator[0], locator[1])
+            #candidate_elem = EC._find_element(driver, locator)
         except NoSuchElementException:
             pass
         else:
@@ -133,10 +136,55 @@ class ScraperWait():
         return found_elem
 
 
+
+
+
+
+
+
+
+
+class SeleniumChromeSession():
+    """Context Manager wrapper for a Selenium Chrome Session."""
+
+    def __init__(self, *, config: Optional[core.ScrapeConfig] = None):
+        """Initialize the Session."""
+        self._chrome_web_driver_path = os.environ.get(CHROME_WEBDRIVER_ENV_VAR)
+        if self._chrome_web_driver_path is None:
+            raise SeleniumSetupError((F'Webdriver not found, set path as env '
+                                    F'Variable: "{CHROME_WEBDRIVER_ENV_VAR}"'))
+
+        proxy = ''
+        if config is not None:
+            if config.url.startswith('https'):
+                proxy = config.proxy_https
+            elif config.url.startswith('http'):
+                proxy = config.proxy_http
+
+        self._chrome_options = webdriver.ChromeOptions()
+        self._chrome_options.add_argument('--headless')
+        self._chrome_options.add_argument(F'user-agent={web_lib.random_useragent()}')
+        if proxy:
+            self._chrome_options.add_argument(F'--proxy-server={proxy}')
+
+    def __enter__(self):
+        self._driver = webdriver.Chrome(
+            chrome_options=self._chrome_options,
+            executable_path=self._chrome_web_driver_path)
+        return self._driver.__enter__()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._driver.__exit__(exc_type, exc_val, exc_tb)
+
+
+
+
+
+# https://stackoverflow.com/questions/26635684/calling-enter-and-exit-manually
 # TODO - Can we write this as a normal Context Manager using __enter__?
 # TODO - There might be a reason we picked this but we need to comment if not possible
 @contextlib.contextmanager
-def SeleniumChromeSession(
+def SeleniumChromeSession111(
         *, config: Optional[core.ScrapeConfig] = None) -> Iterator[RemoteWebDriver]:
     """Context Manager wrapper for a Selenium Chrome Session."""
 
@@ -208,6 +256,8 @@ class SeleniumChromeScraper(core.Scraper):
         result = core.ScrapeResult(self.config.url)
         count = 0
 
+        print(F'type of driver param: {type(driver)}')
+
         # No Default Waiting Condition = wait for load timeout
         wait_conditions = []
 
@@ -223,13 +273,15 @@ class SeleniumChromeScraper(core.Scraper):
 
         # Add Generic Wait Conditions
         for wait_elem in self.config.wait_for_elem_list:
-            wait_conditions.append(WaitCondition(
-                (wait_elem.wait_type, wait_elem.wait_text),
-                WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED))
+            condition = WaitCondition(
+                (get_by_type_from_page_wait_element(
+                    wait_elem.wait_type), wait_elem.wait_text),
+                WaitLogic.MUST_HAVE, WaitType.WAIT_FOR_LOCATED)
+            wait_conditions.append(condition)
 
         if self.config.page_load_wait > 0:
-            driver.set_page_load_wait(self.config.page_load_wait)
-            print(F'{datetime.datetime.now()} - set set_page_load_wait to {self.config.page_load_wait}')
+            driver.set_page_load_timeout(self.config.page_load_wait)
+            print(F'{datetime.datetime.now()} - set set_page_load_timeout to {self.config.page_load_wait}')
 
         try:
             print(F'{datetime.datetime.now()} - Start Get Url')
