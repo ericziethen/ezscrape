@@ -5,6 +5,7 @@
 import enum
 import logging
 
+from dataclasses import dataclass
 from typing import Iterator, List, Optional
 
 import scraping.exceptions as exceptions
@@ -75,6 +76,8 @@ class WaitForPageElem():
 class ScrapeConfig():
     """Class to hold scrape config data needed for downloading the html."""
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, url: str):
         """Initialize a default scrape config with the given url."""
         self.url = url
@@ -106,14 +109,13 @@ class ScrapeConfig():
         return str(self.__dict__)
 
 
+@dataclass
 class ScrapePage():
     """Class to represent a single scraped page."""
 
-    def __init__(self, html: str):
-        """Initialize the scrape page data."""
-        self.html = html
-        self.request_time_ms: float = 0
-        self.status = ScrapeStatus.UNKNOWN
+    html: str
+    request_time_ms: float = 0
+    status = ScrapeStatus.UNKNOWN
 
 
 class ScrapeResult():

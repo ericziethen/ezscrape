@@ -62,6 +62,8 @@ class WaitCondition():
 class ScraperWait():
     """Handle simple multiple conditions for waiting for Elements to Load."""
 
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, conditions: List[WaitCondition]):
         """Initialize the Waiter object."""
         self._conditions = conditions
@@ -294,5 +296,5 @@ def get_by_type_from_page_wait_element(
     """Convert WaitForPageType to Selenium By Type."""
     if wait_element == core.WaitForPageType.XPATH:
         return By.XPATH
-    else:
-        raise ValueError(F'Wait Element "{wait_element}" not supported')
+
+    raise ValueError(F'Wait Element "{wait_element}" not supported')

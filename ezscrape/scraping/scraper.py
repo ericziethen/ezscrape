@@ -78,7 +78,5 @@ def check_url(url: str, *, local_only: bool) -> bool:
         raise ValueError('Url is not a local address')
 
     result = scrape_url(core.ScrapeConfig(url))
-    if result.status == core.ScrapeStatus.SUCCESS:
-        return True
-    else:
-        return False
+
+    return result.status == core.ScrapeStatus.SUCCESS
