@@ -211,7 +211,7 @@ def test_class_WaitCondition():
         scraper_selenium.WaitLogic.MUST_HAVE, scraper_selenium.WaitType.WAIT_FOR_LOCATED)
     assert condition is not None
 
-
+@pytest.mark.eric
 @pytest.mark.selenium
 def test_class_ScraperWait_timeout():
     url = common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01

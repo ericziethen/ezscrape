@@ -4,6 +4,11 @@ PACKAGE_ROOT=ezscrape
 SCRIPT_PATH="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 PROJ_MAIN_DIR=$SCRIPT_PATH/..
 
+if [ "$1" == "travis-ci" ]; then
+    export PYTEST_ADDOPTS=-m "(not selenium) and (not proxytest)"
+    echo "Argument 'travis-ci' passed, set 'PYTEST_ADDOPTS' env variable"
+fi
+
 echo SCRIPT_PATH: $SCRIPT_PATH
 echo PROJ_MAIN_DIR: $PROJ_MAIN_DIR
 echo PACKAGE_ROOT: $PACKAGE_ROOT

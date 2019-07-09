@@ -2,14 +2,12 @@
 
 """Module to provie Scrape functionality using the selenium module."""
 
-import contextlib
-import datetime
 import enum
 import logging
 import os
 
 from dataclasses import dataclass
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from selenium.common.exceptions import (
     NoSuchElementException, TimeoutException, WebDriverException)
@@ -18,14 +16,11 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 import scraping.core as core
 import scraping.web_lib as web_lib
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
-
-CHROME_WEBDRIVER_ENV_VAR = 'CHROME_WEBDRIVER_PATH'
 
 
 class SeleniumSetupError(Exception):
@@ -120,10 +115,7 @@ class ScraperWait():
                       enabled: bool = False) -> WebElement:
         found_elem = None
         try:
-            # TODO - Could we use driver.find_element(locator) here? hor some form
-            print(F'Find Element by: "{locator}"')
             candidate_elem = driver.find_element(locator[0], locator[1])
-            #candidate_elem = EC._find_element(driver, locator)
         except NoSuchElementException:
             pass
         else:
@@ -136,23 +128,29 @@ class ScraperWait():
         return found_elem
 
 
-
-
-
-
-
-
-
-
 class SeleniumChromeSession():
     """Context Manager wrapper for a Selenium Chrome Session."""
 
+    chrome_webdriver_env_var = 'CHROME_WEBDRIVER_PATH'
+    chrome_exec_env_var = 'CHROME_EXEC_PATH'
+
     def __init__(self, *, config: Optional[core.ScrapeConfig] = None):
         """Initialize the Session."""
-        self._chrome_web_driver_path = os.environ.get(CHROME_WEBDRIVER_ENV_VAR)
+        # Using Portable Chrome, we see some issues
+        #   "DevToolsActivePort file doesn't exist"
+        # raised from selenium sometimes, not always for the same tests
+        self._chrome_path = os.environ.get(self.chrome_exec_env_var)
+        if self._chrome_path is None:
+            raise SeleniumSetupError((
+                F'Chrome not found, set path as env Variable: '
+                F'"{self.chrome_exec_env_var}"'))
+
+        self._chrome_web_driver_path = os.environ.get(
+            self.chrome_webdriver_env_var)
         if self._chrome_web_driver_path is None:
-            raise SeleniumSetupError((F'Webdriver not found, set path as env '
-                                    F'Variable: "{CHROME_WEBDRIVER_ENV_VAR}"'))
+            raise SeleniumSetupError(
+                (F'Webdriver not found, set path as env '
+                 F'Variable: "{self.chrome_webdriver_env_var}"'))
 
         proxy = ''
         if config is not None:
@@ -163,73 +161,29 @@ class SeleniumChromeSession():
 
         self._chrome_options = webdriver.ChromeOptions()
         self._chrome_options.add_argument('--headless')
-        self._chrome_options.add_argument(F'user-agent={web_lib.random_useragent()}')
+        self._chrome_options.add_argument('--no-sandbox')
+        self._chrome_options.add_argument(
+            F'user-agent={web_lib.random_useragent()}')
+        if self._chrome_path is not None:
+            self._chrome_options.binary_location = self._chrome_path
+
+        # Disable Listening STDOUT message
+        # https://bugs.chromium.org/p/chromedriver/issues/detail?id=2907#c3
+        self._chrome_options.add_experimental_option(
+            'excludeSwitches', ['enable-logging'])
+
         if proxy:
             self._chrome_options.add_argument(F'--proxy-server={proxy}')
 
-    def __enter__(self):
         self._driver = webdriver.Chrome(
             chrome_options=self._chrome_options,
             executable_path=self._chrome_web_driver_path)
+
+    def __enter__(self) -> RemoteWebDriver:
         return self._driver.__enter__()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
         self._driver.__exit__(exc_type, exc_val, exc_tb)
-
-
-
-
-
-# https://stackoverflow.com/questions/26635684/calling-enter-and-exit-manually
-# TODO - Can we write this as a normal Context Manager using __enter__?
-# TODO - There might be a reason we picked this but we need to comment if not possible
-@contextlib.contextmanager
-def SeleniumChromeSession111(
-        *, config: Optional[core.ScrapeConfig] = None) -> Iterator[RemoteWebDriver]:
-    """Context Manager wrapper for a Selenium Chrome Session."""
-
-    # TODO - WHat was the reason to not use a ContextManager with __enter__ ...???
-
-    # TODO - Support Chrome Portable Overwrite
-    # String chromePath = "M:/my/googlechromeporatble.exe path";
-    #   options.setBinary(chromepath);
-    #   System.setProperty("webdriver.chrome.driver",chromedriverpath);
-    # chrome_exec_var=
-
-    # TODO - The Module will probably come with a default Chrome Webdriver
-    # TODO - IFFFFFF Different Versions work with different Versions of Chrome and
-    # TODO - then let the user overwrite it
-    # TODO - Otherwise User needs to setup both somehow
-    # TODO - ??? Config
-    # TODO - ??? Env Variable
-    # TODO - ??? Parameter
-    chrome_web_driver_path = os.environ.get(CHROME_WEBDRIVER_ENV_VAR)
-    if chrome_web_driver_path is None:
-        raise SeleniumSetupError((F'Webdriver not found, set path as env '
-                                  F'Variable: "{CHROME_WEBDRIVER_ENV_VAR}"'))
-
-    proxy = ''
-    if config is not None:
-        if config.url.startswith('https'):
-            proxy = config.proxy_https
-        elif config.url.startswith('http'):
-            proxy = config.proxy_http
-
-    chrome_options = webdriver.ChromeOptions()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument(F'user-agent={web_lib.random_useragent()}')
-    if proxy:
-        chrome_options.add_argument(F'--proxy-server={proxy}')
-
-    # TODO - SELENIUM Might have some issue with Proxy Verification
-    # See https://stackoverflow.com/questions/12848327/how-to-run-selenium-web-driver-behind-a-proxy-server-which-needs-authentication/35293284#35293284
-
-    with webdriver.Chrome(
-            chrome_options=chrome_options,
-            executable_path=chrome_web_driver_path) as driver:
-        print(F'BEFORE: {datetime.datetime.now()}')
-        yield driver
-        print(F'AFTER: {datetime.datetime.now()}')
 
 
 class SeleniumChromeScraper(core.Scraper):
@@ -250,9 +204,9 @@ class SeleniumChromeScraper(core.Scraper):
                 result = self._scrape_with_driver(driver)
         return result
 
-    def _scrape_with_driver(self, driver: webdriver.Chrome = None) -> core.ScrapeResult:
+    def _scrape_with_driver(
+            self, driver: webdriver.Chrome = None) -> core.ScrapeResult:
         """Scrape using Selenium with Chrome."""
-        # TODO - THIS PROBABLY NEEDS REFACTORING TO MAKE IT SIMPLER
         result = core.ScrapeResult(self.config.url)
         count = 0
 
@@ -281,20 +235,15 @@ class SeleniumChromeScraper(core.Scraper):
 
         if self.config.page_load_wait > 0:
             driver.set_page_load_timeout(self.config.page_load_wait)
-            print(F'{datetime.datetime.now()} - set set_page_load_timeout to {self.config.page_load_wait}')
 
         try:
-            print(F'{datetime.datetime.now()} - Start Get Url')
             driver.get(self.config.url)
-            print(F'{datetime.datetime.now()} - Finish Get Url')
         except WebDriverException as error:
-            print(F'{datetime.datetime.now()} - WebDriverException')
             result.status = core.ScrapeStatus.ERROR
             result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
         else:
             while True:
                 count += 1
-                print(F'### Page Load Count: {count}')
 
                 # Initialize the Scraper Wait object for each iteration / page,
                 # because it stores found elements
@@ -312,7 +261,8 @@ class SeleniumChromeScraper(core.Scraper):
                     result.status = core.ScrapeStatus.TIMEOUT
                     result.add_scrape_page(driver.page_source,
                                            status=core.ScrapeStatus.TIMEOUT)
-                    result.error_msg = F'EXCEPTION: {type(error).__name__} - {error}'
+                    result.error_msg =\
+                        F'EXCEPTION: {type(error).__name__} - {error}'
                     break
                 else:
                     result.status = core.ScrapeStatus.SUCCESS
@@ -326,8 +276,9 @@ class SeleniumChromeScraper(core.Scraper):
                         break
 
                     # If Next Button Found Press
-                    if (next_button_condition is not None) and\
-                       (next_button_condition.key in scraper_wait.found_elements):
+                    if ((next_button_condition is not None) and
+                            (next_button_condition.key in
+                             scraper_wait.found_elements)):
                         next_elem = scraper_wait.found_elements[
                             next_button_condition.key]
 

@@ -12,17 +12,28 @@ rem To see how to loop through multiple Command Line Arguments: https://www.robv
 rem Disable Unwanted tests when run from Travis
 if "%1"=="travis-ci" (
     rem add testing exclusions for travis
-    rem set PYTEST_ADDOPTS=-m "(not proxytest)"
+    set PYTEST_ADDOPTS=-m "(not selenium) and (not proxytest)"
+    echo Argument "travis-ci" passed, set "PYTEST_ADDOPTS" env variable
     goto run_tests
 )
 
 :local_setup
-rem TODO - Different Handling Needed
+rem TODO - Different Handling Needed, need to think how user will set it
+
 set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\74.0.3729.6\win32\chromedriver.exe
 set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\75.0.3770.90\win32\chromedriver.exe
+
+rem set CHROME_EXEC_PATH=C:\# Eric\Portable Apps\GoogleChromePortable\GoogleChromePortable.exe
+set CHROME_EXEC_PATH=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+
 echo ChromeDriver path set to "%CHROME_WEBDRIVER_PATH%"
-echo CHeck CHrome Driver Path Exists:
+echo CHeck Chrome Driver Path Exists:
 dir "%CHROME_WEBDRIVER_PATH%"
+
+echo Chrome path set to "%CHROME_EXEC_PATH%"
+echo CHeck Chrome Path Exists:
+dir "%CHROME_EXEC_PATH%"
+
 pause
 
 :run_tests
