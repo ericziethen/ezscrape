@@ -1,1 +1,1 @@
-# noqa: D104
+"""The Main Package."""
