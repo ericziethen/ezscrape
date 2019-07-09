@@ -55,7 +55,7 @@ before_script:
 script:
 # Run Tests
 - if [ "$TRAVIS_OS_NAME" = "windows" ]; then dev/run_tests.bat travis-ci; fi
-- if [ "$TRAVIS_OS_NAME" = "linux" ]; then ./dev/run_tests.sh; fi
+- if [ "$TRAVIS_OS_NAME" = "linux" ]; then ./dev/run_tests.sh travis-ci; fi
 
 # Run Linting
 - if [ "$TRAVIS_OS_NAME" = "windows" ]; then dev/run_linters.bat; fi
