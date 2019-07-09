@@ -38,6 +38,7 @@ install:
 # don't use the '--upgrade' to not upgrade pinned requirements with generic ones
 - pip install -r Requirements/requirements-dev-for-release.txt
 - pip install -r Requirements/requirements-dev-local.txt
+- pip install -r Requirements/requirements-dev-for-release-WITHOUT-DEPENDENCIES-UNPINNED.txt
 
 # Capture some information
 - pip list
