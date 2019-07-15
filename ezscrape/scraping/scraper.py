@@ -4,13 +4,15 @@
 
 import ipaddress
 import logging
+import urllib
 
-import scraping.scraper_requests
-import scraping.scraper_requests_html
-import scraping.scraper_selenium
+from typing import Optional
 
+import scraping.scraper_requests as scraper_requests
+import scraping.scraper_selenium as scraper_selenium
 
 import scraping.core as core
+import scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -22,12 +24,34 @@ SPECIAL_LOCAL_ADDRESSES = [
 
 
 def scrape_url(config: core.ScrapeConfig) -> core.ScrapeResult:
-    """Generic function to handle all scraping requests."""
-    raise NotImplementedError
+    """Handle all scraping requests."""
+    scraper: Optional[core.Scraper] = None
+
+    # 1.) Try to use Normal Requests Model
+    if scraper is None:
+        try:
+            scraper = scraper_requests.RequestsScraper(config)
+        except exceptions.ScrapeConfigError:
+            pass
+
+    # 2.) Try Using Selenium chrome if no scraper found yet
+    if scraper is None:
+        try:
+            scraper = scraper_selenium.SeleniumChromeScraper(config)
+        except exceptions.ScrapeConfigError:
+            pass
+
+    if scraper is not None:
+        print(F'ScraperFound: {scraper}')
+        result = scraper.scrape()
+    else:
+        raise ValueError(F'No Scraper found for config: {config}')
+
+    return result
 
 
 def is_local_address(url: str) -> bool:
-    """Simple check whether the given url is a local address."""
+    """Check whether the given url is a local address."""
     # Parse the URL
     result = urllib.parse.urlparse(url)
     addr = result.netloc
@@ -53,14 +77,6 @@ def check_url(url: str, *, local_only: bool) -> bool:
     if local_only and (not is_local_address(url)):
         raise ValueError('Url is not a local address')
 
-    config = core.ScrapeConfig(url)
-    result = scraping.scraper_requests.scrape_url_requests(config)
+    result = scrape_url(core.ScrapeConfig(url))
 
-    # TODO - There mist be a better way if the request succeeded than 
-    # TODO - accessing the underlying data directly
-    # TODO - Maybe need a derived value
-    # TODO - Maybe can use an Enum Value to represent different success states
-    if result and (result._scrape_pages[0].success):
-        return True
-    else:
-        return False
+    return result.status == core.ScrapeStatus.SUCCESS

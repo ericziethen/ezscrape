@@ -4,18 +4,15 @@
 
 import enum
 import logging
-import sys
 
-from typing import Iterator, List
+from dataclasses import dataclass
+from typing import Iterator, List, Optional
 
-import fake_useragent
 import scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 DEFAULT_REQUEST_TIMEOUT = 5.0
-DEFAULT_NEXT_PAGE_TIMEOUT = 3
-DEFAULT_JAVASCRIPT_WAIT = 3.0
 DEFAULT_MAX_PAGES = 15
 
 
@@ -31,25 +28,70 @@ class ScrapeStatus(enum.Enum):
     PROXY_ERROR = 'Proxy Error'
 
 
+@enum.unique
+class WaitForPageType(enum.Enum):
+    """Enum for Wait for page types."""
+
+    # pylint: disable=invalid-name
+    XPATH = 'xpath'
+
+
+class WaitForPageElem():
+    """Class to define how to wait for a page."""
+
+    def __init__(self, wait_type: WaitForPageType, wait_text: str):
+        """Set up the Wait Element."""
+        self.wait_text = wait_text
+        self.wait_type = wait_type
+
+    @property
+    def wait_text(self) -> str:
+        """Property to define the wait_text attribute."""
+        return self._wait_text
+
+    @wait_text.setter
+    def wait_text(self, new_wait_text: str) -> None:
+        """Setter for the wait_text attribute."""
+        if not isinstance(new_wait_text, str):
+            raise ValueError('wait_text need to be a valid str')
+        # pylint: disable=attribute-defined-outside-init
+        self._wait_text = new_wait_text
+        # pylint: enable=attribute-defined-outside-init
+
+    @property
+    def wait_type(self) -> WaitForPageType:
+        """Property to define the wait_type attribute."""
+        return self._wait_type
+
+    @wait_type.setter
+    def wait_type(self, new_wait_type: WaitForPageType) -> None:
+        """Setter for the wait_type attribute."""
+        if not isinstance(new_wait_type, WaitForPageType):
+            raise ValueError('wait_type need to be a valid str')
+        # pylint: disable=attribute-defined-outside-init
+        self._wait_type = new_wait_type
+        # pylint: enable=attribute-defined-outside-init
+
+
 class ScrapeConfig():
     """Class to hold scrape config data needed for downloading the html."""
 
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self, url: str):
         """Initialize a default scrape config with the given url."""
-        # TODO - CHeck if can Simplify some parameters
-        # TODO - it should be clear how to configure
-        # TODO - Maybe Multipage, Javascript & xpath should be part of constructor???
         self.url = url
+
         self.request_timeout = DEFAULT_REQUEST_TIMEOUT
+        self.page_load_wait = 0
+
         self.proxy_http = ''
         self.proxy_https = ''
-        self.javascript = False
-        self.javascript_wait = DEFAULT_JAVASCRIPT_WAIT
         self.useragent = None
-        self.attempt_multi_page = False
-        self.wait_for_xpath = ''
         self.max_pages = DEFAULT_MAX_PAGES
-        self.next_page_timeout = DEFAULT_NEXT_PAGE_TIMEOUT
+
+        self.next_button: Optional[WaitForPageElem] = None
+        self.wait_for_elem_list: List[WaitForPageElem] = []
 
     @property
     def url(self) -> str:
@@ -63,15 +105,17 @@ class ScrapeConfig():
             raise exceptions.ScrapeConfigError('Url cannot be blank')
         self._url = new_url  # pylint: disable=attribute-defined-outside-init
 
+    def __str__(self) -> str:
+        return str(self.__dict__)
 
+
+@dataclass
 class ScrapePage():
     """Class to represent a single scraped page."""
 
-    def __init__(self, html: str):
-        """Initialize the scrape page data."""
-        self.html = html
-        self.request_time_ms: float = 0
-        self.status = ScrapeStatus.UNKNOWN
+    html: str
+    request_time_ms: float = 0
+    status = ScrapeStatus.UNKNOWN
 
 
 class ScrapeResult():
@@ -83,14 +127,9 @@ class ScrapeResult():
         self._idx = 0
 
         self.url = url
-
-        # TODO - Status should be (_scrape_pages > 0) and (not error_msg)
-        # TODO - Or some other logic
+        self.caller_ip = None
         self.status: ScrapeStatus = ScrapeStatus.UNKNOWN
         self.error_msg = ''
-
-        self._raw_response = None
-
 
     @property
     def request_time_ms(self) -> float:
@@ -133,11 +172,8 @@ class Scraper():
 
     def __init__(self, config: ScrapeConfig):
         """Initialize the Scrape Class."""
+        print(F'Scraper.__init__()')
         self.config: ScrapeConfig = config
-
-    def scrape(self) -> ScrapeResult:
-        """Scrape based on the set config."""
-        raise NotImplementedError
 
     @classmethod
     def _validate_config(cls, config: ScrapeConfig) -> None:
@@ -152,6 +188,7 @@ class Scraper():
 
     @config.setter
     def config(self, new_config: ScrapeConfig) -> None:
+        print(F'Scraper.@config.setter')
         # Check in setter because True for subclasses as well
         if new_config is None:
             raise ValueError("Config must be provided")
@@ -162,7 +199,9 @@ class Scraper():
         self._config = new_config
         # pylint: enable=attribute-defined-outside-init
 
+    def scrape(self) -> ScrapeResult:
+        """Scrape based on the set config."""
+        raise NotImplementedError
 
-def generic_useragent():
-    """Generate a generic user agent."""
-    return fake_useragent.UserAgent().chrome
+    def __str__(self) -> str:
+        return F'{type(self).__name__} for Url: {self.config.url}'

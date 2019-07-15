@@ -4,21 +4,47 @@ import scraping.core as core
 import scraping.exceptions as exceptions
 
 
+def test_WaitForPageElem_ok():
+    core.WaitForPageElem(core.WaitForPageType.XPATH, '')
+    core.WaitForPageElem(core.WaitForPageType.XPATH, 'xpath-text')
+
+
+def test_WaitForPageElem_invalid_text():
+    with pytest.raises(ValueError):
+        core.WaitForPageElem(core.WaitForPageType.XPATH, 15)
+
+    with pytest.raises(ValueError):
+        core.WaitForPageElem(core.WaitForPageType.XPATH, None)
+
+    elem = core.WaitForPageElem(core.WaitForPageType.XPATH, '')
+    with pytest.raises(ValueError):
+        elem.wait_text = 15
+
+
+def test_WaitForPageElem_invalid_type():
+    with pytest.raises(ValueError):
+        core.WaitForPageElem(15, '')
+
+    with pytest.raises(ValueError):
+        core.WaitForPageElem(None, '')
+
+    elem = core.WaitForPageElem(core.WaitForPageType.XPATH, '')
+    with pytest.raises(ValueError):
+        elem.wait_type = 15
+
+
 def test_scrape_config_default_values_set():
     url = 'fake_url'
     config = core.ScrapeConfig(url)
     
     assert config.url == url
     assert config.request_timeout == core.DEFAULT_REQUEST_TIMEOUT
-    assert config.javascript_wait == core.DEFAULT_JAVASCRIPT_WAIT
     assert config.max_pages == core.DEFAULT_MAX_PAGES
-    assert config.next_page_timeout == core.DEFAULT_NEXT_PAGE_TIMEOUT
     assert not config.proxy_http
     assert not config.proxy_https
     assert config.useragent is None
-    assert not config.wait_for_xpath
-    assert not config.javascript
-    assert not config.attempt_multi_page
+    assert not config.wait_for_elem_list
+    assert config.next_button == None
 
 
 @pytest.mark.parametrize('invalid_url', [None, '', 15])

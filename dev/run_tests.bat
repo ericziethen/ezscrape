@@ -2,28 +2,42 @@
 
 setlocal
 
-rem This selfwrapper calls itself again to avoid closing the command window when exiting
-IF "%selfWrapped%"=="" (
-  REM this is necessary so that we can use "exit" to terminate the batch file,
-  REM and all subroutines, but not the original cmd.exe
-  SET selfWrapped=true
-  %ComSpec% /s /c ""%~0" %*"
-  GOTO :EOF
-)
-
 set PROJ_MAIN_DIR=%~dp0..
-
-pushd %PROJ_MAIN_DIR%
-
 set PACKAGE_ROOT=ezscrape
 
 set PYTHONPATH=%PYTHONPATH%;%PACKAGE_ROOT%
 
-rem Set Selenium Test Driver Path
-set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\74.0.3729.6\win32\chromedriver.exe
+rem To see how to loop through multiple Command Line Arguments: https://www.robvanderwoude.com/parameters.php
 
-rem Test directories are specified in Pytest.ini
-pytest --cov=%PACKAGE_ROOT%
+rem Disable Unwanted tests when run from Travis
+if "%1"=="travis-ci" (
+    rem add testing exclusions for travis
+    set PYTEST_ADDOPTS=-m "(not selenium) and (not proxytest)"
+    echo Argument "travis-ci" passed, set "PYTEST_ADDOPTS" env variable
+    goto run_tests
+)
+
+:local_setup
+rem TODO - Different Handling Needed, need to think how user will set it
+
+set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\74.0.3729.6\win32\chromedriver.exe
+set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\75.0.3770.90\win32\chromedriver.exe
+
+rem set CHROME_EXEC_PATH=C:\# Eric\Portable Apps\GoogleChromePortable\GoogleChromePortable.exe
+set CHROME_EXEC_PATH=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
+
+echo ChromeDriver path set to "%CHROME_WEBDRIVER_PATH%"
+echo CHeck Chrome Driver Path Exists:
+dir "%CHROME_WEBDRIVER_PATH%"
+
+echo Chrome path set to "%CHROME_EXEC_PATH%"
+echo CHeck Chrome Path Exists:
+dir "%CHROME_EXEC_PATH%"
+
+pause
+
+:run_tests
+pytest --rootdir="%PROJ_MAIN_DIR%" --cov="%PACKAGE_ROOT%"
 set return_code=%errorlevel%
 if %return_code% equ 0 (
     echo *** No Issues Found
@@ -41,11 +55,11 @@ rem http://blog.thedigitalcatonline.com/blog/2018/07/05/useful-pytest-command-li
 rem https://www.patricksoftwareblog.com/python-unit-testing-structuring-your-project/
 
 :exit_error
-popd
 endlocal
+echo exit /B 1
 exit /B 1
 
 :exit_ok
-popd
 endlocal
+echo exit /B 0
 exit /B 0

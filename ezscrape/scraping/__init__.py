@@ -1,2 +1,1 @@
-from . import scraper
-from . import exceptions
+"""The scraping package."""

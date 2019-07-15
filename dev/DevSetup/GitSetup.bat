@@ -10,3 +10,6 @@ git config merge.commit no
 git config merge.ff no
 git config pull.ff only
 
+rem Alwaysh Push Annotated Tags
+git config --global push.followTags true
+
