@@ -73,6 +73,14 @@ class WaitForPageElem():
         # pylint: enable=attribute-defined-outside-init
 
 
+class WaitForXpathElem(WaitForPageElem):
+    """A wait for Xpath Element."""
+
+    def __init__(self, xpath: str):
+        """Initialising the Xpath Element."""
+        super().__init__(WaitForPageType.XPATH, xpath)
+
+
 class ScrapeConfig():
     """Class to hold scrape config data needed for downloading the html."""
 

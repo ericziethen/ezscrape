@@ -110,6 +110,23 @@ def test_selenium_scraper_page_load_wait_enough_time():
     assert common.JS_TEST_STRING in page
 
 
+@pytest.mark.selenium
+def test_selenium_scraper_scrape_wait_for_xpath():
+    config = core.ScrapeConfig(common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01)
+    config.wait_for_elem_list.append(
+        core.WaitForXpathElem(R'''//a[@title='next' and @class='enabled']'''))
+    #config.next_button = core.WaitForXpathElem(R'''//a[@title='next' and @class='enabled']''')
+    #config.max_pages = 1
+    result = scraper_selenium.SeleniumChromeScraper(config).scrape()
+
+    assert result.status == core.ScrapeStatus.SUCCESS
+    assert len(result) == 1
+    page = result._scrape_pages[0].html
+
+    assert common.NON_JS_TEST_STRING in page
+    assert common.JS_TEST_STRING in page
+
+
 @pytest.mark.slow
 @pytest.mark.selenium
 def test_selenium_scraper_scrape_paging():
@@ -211,7 +228,6 @@ def test_class_WaitCondition():
         scraper_selenium.WaitLogic.MUST_HAVE, scraper_selenium.WaitType.WAIT_FOR_LOCATED)
     assert condition is not None
 
-@pytest.mark.eric
 @pytest.mark.selenium
 def test_class_ScraperWait_timeout():
     url = common.URL_MULTI_PAGE_JS_STATIC_LINKS_WITH_STATE_01
