@@ -77,7 +77,7 @@ class WaitForXpathElem(WaitForPageElem):
     """A wait for Xpath Element."""
 
     def __init__(self, xpath: str):
-        """Initialising the Xpath Element."""
+        """Set up the Xpath Element."""
         super().__init__(WaitForPageType.XPATH, xpath)
 
 
