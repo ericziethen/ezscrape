@@ -4,9 +4,13 @@ import scraping.core as core
 import scraping.exceptions as exceptions
 
 
+
 def test_WaitForPageElem_ok():
     core.WaitForPageElem(core.WaitForPageType.XPATH, '')
-    core.WaitForPageElem(core.WaitForPageType.XPATH, 'xpath-text')
+    res = core.WaitForPageElem(core.WaitForPageType.XPATH, 'xpath-text')
+
+    assert isinstance(res, core.WaitForPageElem)
+    assert res.wait_text == 'xpath-text'
 
 
 def test_WaitForPageElem_invalid_text():
@@ -21,6 +25,7 @@ def test_WaitForPageElem_invalid_text():
         elem.wait_text = 15
 
 
+
 def test_WaitForPageElem_invalid_type():
     with pytest.raises(ValueError):
         core.WaitForPageElem(15, '')
@@ -31,6 +36,28 @@ def test_WaitForPageElem_invalid_type():
     elem = core.WaitForPageElem(core.WaitForPageType.XPATH, '')
     with pytest.raises(ValueError):
         elem.wait_type = 15
+
+
+def test_WaitForXpathElem_ok():
+    core.WaitForXpathElem('')
+
+    res = core.WaitForXpathElem('xpath-text')
+
+    assert isinstance(res, core.WaitForPageElem)
+    assert isinstance(res, core.WaitForXpathElem)
+    assert res.wait_text == 'xpath-text'
+
+
+def test_WaitForXpathElem_invalid_text():
+    with pytest.raises(ValueError):
+        core.WaitForXpathElem(15)
+
+    with pytest.raises(ValueError):
+        core.WaitForXpathElem(None)
+
+    elem = core.WaitForXpathElem('')
+    with pytest.raises(ValueError):
+        elem.wait_text = 15
 
 
 def test_scrape_config_default_values_set():
