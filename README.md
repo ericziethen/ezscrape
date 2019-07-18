@@ -29,5 +29,34 @@
     </tr>
 </table>
 
-# ez-proxy-tools
-Provide Proxy Related Tools like Proxy Scraper, Checker and Downloader
+# ezscrape
+Provide an abstract scraping wrapper using multiple libraries to support different scraping tasks e.g. requests, selenium...
+
+# Requirements Files
+* requirements.txt (all requirements pinned)
+* Requirements/requirements-release-unpinned.txt (unpinned modules for release)
+* Requirements/requirements-testing.txt (testing modules)
+
+# Scraping Example
+
+## Scrape a simple HTML Page
+
+TODO
+
+## Scrape a Page with Javascript
+
+TODO
+
+## Scrape a Page with Multiple Pages
+
+TODO
+
+# Scrape Config
+
+TODO
+
+# Scrape Result
+
+TODO
+
+
