@@ -96,7 +96,7 @@ deploy:
   - provider: pypi
     skip_cleanup: true
     distributions: sdist bdist_wheel
-    server: https://test.pypi.org/legacy/ # Remove for deployment to official PyPi repo
+    #server: https://test.pypi.org/legacy/ # Remove for deployment to official PyPi repo
     user: ericziethen
     password:  # run "travis encrypt ***the_password*** --add" from inside the repository
       secure: klO6q5TqLVeYqvNQ2+chlW5wsbFMQ4BM+5Cf1rcFslysk3i9sUjH4Y4etA5pSqHiPEI2/MsUffIDmPLn5DkSO/4gT9wljUJJJWoC+W2PZMx2lnzUX70MPQ4v7Vel6Y286e1P8i10DlZe6W4Mq7RcdwO2OoYrJ5ZVZCEUiZngrOeOrESmpNGXbI1M9/osrwnGlmw6tJjMFJqSKXUMQX/WYHhwX3EXOZBzZS4s/AEx/ScY/rrtHr+E7YccvGcrG5796flFHUN3vKuWP0NBqZrMrY4rJRSpnWNENjre4U8jvDb74vYfFQvU09wYuuqNOI1fwj1LjyPigQ/TtS4q8aq/0m03adSLBB7E8LlyP6TjtduMhUExinEZQOuTL6AiudhEYUooDOWznhaGyQfFq9Sh59/VDGn+ew2+dXSbZ3+rV3o6KU0HkEUpd9Hvc25979geAaUuz5qVC1nnqqe2V3WehPzfzCBoZO51Rxo/A0gSaAVj9Hy6AKzFW5AQKwbtau5tbmPYNir33ipHzOpUI7xXk54rj2BJAmDzKMa35EKr5uBGh2SIgmksgjcIwFfwzmTGW5HNf9hoO/G4ILtOg85HzZ4JS7gbQM5avQqFOIIyl29v+XuFi18gH4haMRMEamP3sjGnBFMXfBaveBSnGcH6XfsiyQQiy6nklRifxkwGxXk=
