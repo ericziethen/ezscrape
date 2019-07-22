@@ -188,7 +188,6 @@ class Scraper():
 
     def __init__(self, config: ScrapeConfig):
         """Initialize the Scrape Class."""
-        print(F'Scraper.__init__()')
         self.config: ScrapeConfig = config
 
     @classmethod
@@ -204,7 +203,6 @@ class Scraper():
 
     @config.setter
     def config(self, new_config: ScrapeConfig) -> None:
-        print(F'Scraper.@config.setter')
         # Check in setter because True for subclasses as well
         if new_config is None:
             raise ValueError("Config must be provided")
