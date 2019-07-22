@@ -70,7 +70,7 @@ def test_selenium_scraper_scrape_ok_single_page(url, javascript):
     assert result.status == core.ScrapeStatus.SUCCESS
     assert not result.error_msg
     assert len(result) == 1
-    page = result._scrape_pages[0].html
+    page = result.first_page.html
 
     assert common.NON_JS_TEST_STRING in page
     if javascript:
@@ -104,7 +104,7 @@ def test_selenium_scraper_page_load_wait_enough_time():
 
     assert result.status == core.ScrapeStatus.SUCCESS
     assert len(result) == 1
-    page = result._scrape_pages[0].html
+    page = result.first_page.html
 
     assert common.NON_JS_TEST_STRING in page
     assert common.JS_TEST_STRING in page
@@ -121,7 +121,7 @@ def test_selenium_scraper_scrape_wait_for_xpath():
 
     assert result.status == core.ScrapeStatus.SUCCESS
     assert len(result) == 1
-    page = result._scrape_pages[0].html
+    page = result.first_page.html
 
     assert common.NON_JS_TEST_STRING in page
     assert common.JS_TEST_STRING in page
@@ -167,7 +167,7 @@ def test_selenium_chrome_context_manager_good_scrape():
             config = core.ScrapeConfig(url)
             result = scraper_selenium.SeleniumChromeScraper(config, driver=chrome_session).scrape()
 
-            page = result._scrape_pages[0].html
+            page = result.first_page.html
             if javascript:
                 assert common.JS_TEST_STRING in page
             else:
