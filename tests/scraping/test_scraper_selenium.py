@@ -5,8 +5,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-import scraping.core as core
-import scraping.exceptions as exceptions
+import ezscrape.scraping.core as core
+import ezscrape.scraping.exceptions as exceptions
 import tests.common as common
 
 import ezscrape.scraping.scraper_selenium as scraper_selenium

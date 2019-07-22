@@ -8,9 +8,9 @@ import socket
 
 import requests
 
-import scraping.core as core
-import scraping.web_lib as web_lib
-import scraping.exceptions as exceptions
+import ezscrape.scraping.core as core
+import ezscrape.scraping.web_lib as web_lib
+import ezscrape.scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 

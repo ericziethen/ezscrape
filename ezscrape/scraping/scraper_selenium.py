@@ -17,8 +17,8 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver as RemoteWebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 
-import scraping.core as core
-import scraping.web_lib as web_lib
+import ezscrape.scraping.core as core
+import ezscrape.scraping.web_lib as web_lib
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 

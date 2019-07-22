@@ -8,7 +8,7 @@ import logging
 from dataclasses import dataclass
 from typing import Iterator, List, Optional
 
-import scraping.exceptions as exceptions
+import ezscrape.scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 

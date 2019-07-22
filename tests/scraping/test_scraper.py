@@ -1,8 +1,8 @@
 import pytest
 
-import scraping.scraper as scraper
-import scraping.core as core
-import scraping.exceptions as exceptions
+import ezscrape.scraping.scraper as scraper
+import ezscrape.scraping.core as core
+import ezscrape.scraping.exceptions as exceptions
 import tests.common as common
 
 ########################################

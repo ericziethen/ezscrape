@@ -1,6 +1,6 @@
 import pytest
 
-import scraping.web_lib as web_lib
+import ezscrape.scraping.web_lib as web_lib
 
 
 def test_phrase_from_response_code():
