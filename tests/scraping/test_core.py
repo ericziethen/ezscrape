@@ -84,6 +84,21 @@ def test_scrape_config_set_invalid_url(invalid_url):
         valid_config.url = invalid_url
 
 
+def test_scrape_result_single_page_not_found():
+    result = core.ScrapeResult('url')
+    assert result.first_page is None
+
+
+def test_scrape_result_single_page_found():
+    result = core.ScrapeResult('url')
+    result.add_scrape_page('html', scrape_time=15, status=core.ScrapeStatus.SUCCESS)
+
+    assert result.first_page is not None
+    assert result.first_page.html == 'html'
+    assert result.first_page.request_time_ms == 15
+    assert result.first_page.status == core.ScrapeStatus.SUCCESS
+
+
 def test_scrape_result_no_pages():
     result = core.ScrapeResult('url')
     assert not bool(result)

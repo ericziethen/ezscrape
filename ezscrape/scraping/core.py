@@ -147,6 +147,14 @@ class ScrapeResult():
             req_time += page.request_time_ms
         return req_time
 
+    @property
+    def first_page(self) -> Optional[ScrapePage]:
+        """Property to get the first page scraped."""
+        if self._scrape_pages:
+            return self._scrape_pages[0]
+        else:
+            return None
+
     def add_scrape_page(self, html: str, *,
                         scrape_time: float = 0,
                         status: ScrapeStatus) -> None:
