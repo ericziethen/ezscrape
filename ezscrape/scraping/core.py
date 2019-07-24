@@ -8,7 +8,7 @@ import logging
 from dataclasses import dataclass
 from typing import Iterator, List, Optional
 
-import scraping.exceptions as exceptions
+import ezscrape.scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -147,6 +147,14 @@ class ScrapeResult():
             req_time += page.request_time_ms
         return req_time
 
+    @property
+    def first_page(self) -> Optional[ScrapePage]:
+        """Property to get the first page scraped."""
+        if self._scrape_pages:
+            return self._scrape_pages[0]
+
+        return None
+
     def add_scrape_page(self, html: str, *,
                         scrape_time: float = 0,
                         status: ScrapeStatus) -> None:
@@ -180,7 +188,6 @@ class Scraper():
 
     def __init__(self, config: ScrapeConfig):
         """Initialize the Scrape Class."""
-        print(F'Scraper.__init__()')
         self.config: ScrapeConfig = config
 
     @classmethod
@@ -196,7 +203,6 @@ class Scraper():
 
     @config.setter
     def config(self, new_config: ScrapeConfig) -> None:
-        print(F'Scraper.@config.setter')
         # Check in setter because True for subclasses as well
         if new_config is None:
             raise ValueError("Config must be provided")

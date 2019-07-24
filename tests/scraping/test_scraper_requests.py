@@ -1,8 +1,8 @@
 import pytest
 
-import scraping.core as core
-import scraping.exceptions as exceptions
-import scraping.web_lib as web_lib
+import ezscrape.scraping.core as core
+import ezscrape.scraping.exceptions as exceptions
+import ezscrape.scraping.web_lib as web_lib
 import tests.common as common
 
 import ezscrape.scraping.scraper_requests as scraper_requests
@@ -63,10 +63,10 @@ def test_requests_scraper_scrape_ok(url):
     assert result.request_time_ms > 0
     assert not result.error_msg
     assert len(result) == 1
-    assert result._scrape_pages[0].status == core.ScrapeStatus.SUCCESS
+    assert result.first_page.status == core.ScrapeStatus.SUCCESS
 
     # Validate HTML scraped succesfully
-    page = result._scrape_pages[0].html
+    page = result.first_page.html
     assert common.NON_JS_TEST_STRING in page
     assert common.JS_TEST_STRING not in page
 
@@ -137,7 +137,7 @@ def test_proxies(url, http_proxy, https_proxy):
         proxy_ip = https_proxy
 
     '''
-    page = result._scrape_pages[0]
+    page = result.first_page
     print('HTML', page.html)
 
     html_ip = common.whatsmyip_ip_from_html(url, page.html)

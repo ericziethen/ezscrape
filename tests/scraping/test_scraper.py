@@ -1,8 +1,8 @@
 import pytest
 
-import scraping.scraper as scraper
-import scraping.core as core
-import scraping.exceptions as exceptions
+import ezscrape.scraping.scraper as scraper
+import ezscrape.scraping.core as core
+import ezscrape.scraping.exceptions as exceptions
 import tests.common as common
 
 ########################################
@@ -18,10 +18,10 @@ def test_scrape_url_scraper_no_js():
     assert result.status == core.ScrapeStatus.SUCCESS
     assert not result.error_msg
     assert len(result) == 1
-    assert result._scrape_pages[0].status == core.ScrapeStatus.SUCCESS
+    assert result.first_page.status == core.ScrapeStatus.SUCCESS
 
     # Validate HTML scraped succesfully
-    page = result._scrape_pages[0].html
+    page = result.first_page.html
     assert common.NON_JS_TEST_STRING in page
     assert common.JS_TEST_STRING not in page
 
@@ -39,7 +39,7 @@ def test_scrape_url_scraper_js():
     assert result.status == core.ScrapeStatus.SUCCESS
     assert not result.error_msg
     assert len(result) == 1
-    page = result._scrape_pages[0].html
+    page = result.first_page.html
 
     assert common.NON_JS_TEST_STRING in page
     assert common.JS_TEST_STRING in page

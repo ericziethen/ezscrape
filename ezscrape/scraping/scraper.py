@@ -8,11 +8,11 @@ import urllib
 
 from typing import Optional
 
-import scraping.scraper_requests as scraper_requests
-import scraping.scraper_selenium as scraper_selenium
+import ezscrape.scraping.scraper_requests as scraper_requests
+import ezscrape.scraping.scraper_selenium as scraper_selenium
 
-import scraping.core as core
-import scraping.exceptions as exceptions
+import ezscrape.scraping.core as core
+import ezscrape.scraping.exceptions as exceptions
 
 logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
@@ -42,7 +42,6 @@ def scrape_url(config: core.ScrapeConfig) -> core.ScrapeResult:
             pass
 
     if scraper is not None:
-        print(F'ScraperFound: {scraper}')
         result = scraper.scrape()
     else:
         raise ValueError(F'No Scraper found for config: {config}')

@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
-import scraping.core as core
+import ezscrape.scraping.core as core
 
 LOCAL_SERVER_HTTP = R'http://127.0.0.1:8000'
 

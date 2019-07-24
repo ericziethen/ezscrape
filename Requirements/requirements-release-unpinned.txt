@@ -6,3 +6,7 @@ beautifulsoup4
 fake_useragent
 requests
 selenium
+
+# Packaging
+twine
+wheel
