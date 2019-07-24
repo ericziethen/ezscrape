@@ -97,7 +97,7 @@ deploy:
     #server: https://test.pypi.org/legacy/ # Remove for deployment to official PyPi repo
     user: ericziethen
     password:  # run "travis encrypt ***the_password*** --add" from inside the repository
-      secure: klO6q5TqLVeYqvNQ2+chlW5wsbFMQ4BM+5Cf1rcFslysk3i9sUjH4Y4etA5pSqHiPEI2/MsUffIDmPLn5DkSO/4gT9wljUJJJWoC+W2PZMx2lnzUX70MPQ4v7Vel6Y286e1P8i10DlZe6W4Mq7RcdwO2OoYrJ5ZVZCEUiZngrOeOrESmpNGXbI1M9/osrwnGlmw6tJjMFJqSKXUMQX/WYHhwX3EXOZBzZS4s/AEx/ScY/rrtHr+E7YccvGcrG5796flFHUN3vKuWP0NBqZrMrY4rJRSpnWNENjre4U8jvDb74vYfFQvU09wYuuqNOI1fwj1LjyPigQ/TtS4q8aq/0m03adSLBB7E8LlyP6TjtduMhUExinEZQOuTL6AiudhEYUooDOWznhaGyQfFq9Sh59/VDGn+ew2+dXSbZ3+rV3o6KU0HkEUpd9Hvc25979geAaUuz5qVC1nnqqe2V3WehPzfzCBoZO51Rxo/A0gSaAVj9Hy6AKzFW5AQKwbtau5tbmPYNir33ipHzOpUI7xXk54rj2BJAmDzKMa35EKr5uBGh2SIgmksgjcIwFfwzmTGW5HNf9hoO/G4ILtOg85HzZ4JS7gbQM5avQqFOIIyl29v+XuFi18gH4haMRMEamP3sjGnBFMXfBaveBSnGcH6XfsiyQQiy6nklRifxkwGxXk=
+      secure: "mTotRhUWIMKzhyT6yUnbZr1KJTjRL3M1hev9+sbSRTPXQT5kspX7tKBtnA7RMB64xN3tCfC0WRY1gh8IKJyQP1almzJfQPAUJ2eKpcHL13/rJXw2xhqR7cNC9adU4vl4dFEIC31NZ6/MOVNDX6kQ5dso9xmODO+AJ432Emh3EDqCqkDJZGj6XNLDv997iKdh09+/RdKksUfbXMCpsx+NREVDS/upIRetFNxiLGhu0AvzdFBXW1AdsjR/DZw0NBD0EOPKEtk4nA3IXHVAn4we2cDc/sV6MWt1e/O2BjnI4nXCJorqtdLnjbELli3sXC9/2jr3/pDCN569RQAa04V1rwXc5OHCmY7Q9D0PHv4TcEFWpgDo4e8U7xcFVqT7c1XZW5UMz8TiKOvOazDF6FZumdkAUzcGWgQGelhX2dMKR5Guh48WlF8YIHDLffDN4sssaCvPmuuNIPCWcqPFk7Vr6rbPwRxB/PgGL0V+UX+KAqbPWW3aexL5uN+jizpZyU2ycq3A3ZkXa73Y1WrZh2A/wdJ18QZLePBIMZHAXwuA45FM/3nKNg0nvfyCx3EpvmJIwdW5w4x2v1AvWtMVOYXR94YOQdEM1zZOLNe6SSdtzoJh5W/N0ei9bpSbexcVG549oqx+0od/CzgNbqMlBwqvdQ6qSKIaCaogXlOUvBWtsSA="
     on:
       condition: $DEPLOY_ENABLED = "True" && "$TRAVIS_TAG =~ ^v.*$"
       tags: true
