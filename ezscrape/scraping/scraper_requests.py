@@ -92,7 +92,6 @@ class RequestsScraper(core.Scraper):
         # pylint: disable=unused-argument
         sock = socket.fromfd(response.raw.fileno(), socket.AF_INET,
                              socket.SOCK_STREAM)
-        print('SOCKET:', sock)
         self._caller_ip = sock.getpeername()[0]
 
     @classmethod

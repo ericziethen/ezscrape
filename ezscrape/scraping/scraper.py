@@ -42,7 +42,6 @@ def scrape_url(config: core.ScrapeConfig) -> core.ScrapeResult:
             pass
 
     if scraper is not None:
-        print(F'ScraperFound: {scraper}')
         result = scraper.scrape()
     else:
         raise ValueError(F'No Scraper found for config: {config}')

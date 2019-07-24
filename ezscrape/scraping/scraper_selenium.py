@@ -67,7 +67,6 @@ class ScraperWait():
     def __init__(self, conditions: List[WaitCondition]):
         """Initialize the Waiter object."""
         self._conditions = conditions
-        print(F'ScraperWait_init, conditions: {conditions}')
         self.found_elements: Dict[str, WebElement] = {}
         self._found_might_have_count = 0
         self._found_must_have_count = 0
@@ -211,8 +210,6 @@ class SeleniumChromeScraper(core.Scraper):
         """Scrape using Selenium with Chrome."""
         result = core.ScrapeResult(self.config.url)
         count = 0
-
-        print(F'type of driver param: {type(driver)}')
 
         # No Default Waiting Condition = wait for load timeout
         wait_conditions = []
