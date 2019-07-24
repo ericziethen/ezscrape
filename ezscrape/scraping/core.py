@@ -152,8 +152,8 @@ class ScrapeResult():
         """Property to get the first page scraped."""
         if self._scrape_pages:
             return self._scrape_pages[0]
-        else:
-            return None
+
+        return None
 
     def add_scrape_page(self, html: str, *,
                         scrape_time: float = 0,
