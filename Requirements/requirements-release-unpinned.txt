@@ -1,12 +1,5 @@
 
-# parsing
-beautifulsoup4
-
 # Network Related
 fake_useragent
 requests
 selenium
-
-# Packaging
-twine
-wheel
