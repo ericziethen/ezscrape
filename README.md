@@ -30,19 +30,38 @@
 </table>
 
 # ezscrape
-Provide an abstract scraping wrapper using multiple libraries to support different scraping tasks e.g. requests, selenium...
 
-# Requirements Files
-* requirements.txt (all requirements pinned)
-* Requirements/requirements-release-unpinned.txt (unpinned modules for release)
-* Requirements/requirements-testing.txt (testing modules)
+ezscrape provides a boilerplate for simple scraping tasks.
+
+It provide generic access to scraping functionality without exposing the user directly the the underlying libraries used (e.g. requests, selenium) when using the scraping functionality.
+The used scraper is chosen based on the specified config parameters and will prefer the most flexibe / least resource intensive ones if possible.
+
+The exceptions of the underlying modules are handled and converted into the status of the result object.
 
 # Setup Requirements
 ## Setup Chrome and Webdriver
 
-TODO
+For some websites selenium will be used for scraping (e.g. requests doesn't support javascript)
 
-# Scraping Example
+For that purpose the following environment variables need to be set otherwise an exception will be raised when the code is using selenium.
+
+1. The Chrome Executable
+
+    *CHROME_EXEC_PATH*
+
+2. The Chrome Webdriver Executable
+
+    *CHROME_WEBDRIVER_PATH*
+
+# Usage
+
+1. The basic concept of a simple scrape is
+2. Create the Scrape Config with a Url
+3. Optional - set additional parameters on the scrape config
+4. Scrape with the given Config
+5. Check the Return Object if the Scrape was succesfull
+6. Get the HTML from the Return Object
+
 
 ## Scrape a simple HTML Page
 
@@ -50,10 +69,14 @@ TODO
 
 import ezscrape.scraping.scraper as scraper
 from ezscrape.scraping.core import ScrapeConfig
+from ezscrape.scraping.core import ScrapeStatus
 
-result = scraper.scrape_url(ScrapeConfig('http://some-url.com'))
+result = scraper.scrape_url(ScrapeConfig('http://www.website.com'))
 
-html = result.first_page.html
+if result.status == ScrapeStatus.SUCCESS:
+    html = result.first_page.html
+else:
+    print(result.error_msg)
 
 ~~~
 
@@ -64,15 +87,19 @@ html = result.first_page.html
 import ezscrape.scraping.scraper as scraper
 from ezscrape.scraping.core import ScrapeConfig
 from ezscrape.scraping.core import WaitForXpathElem
+from ezscrape.scraping.core import ScrapeStatus
 
-config = ScrapeConfig('http://some-url.com')
-config.next_button = WaitForXpathElem(R'''XPATH''')
+config = ScrapeConfig('http://www.website.com')
+# Add contition to wait until Element with "title='id'" is loaded"
+config.wait_for_elem_list.append(WaitForXpathElem(R'''//a[@title='id']'''))
 
 result = scraper.scrape_url(config)
 
 for page in result:
-    html = page.html
-
+    if page.status == ScrapeStatus.SUCCESS:
+        html = page.html
+    else:
+        print(result.error_msg)
 ~~~
 
 ## Scrape a Page and wait until an Element is Loaded
@@ -82,13 +109,19 @@ for page in result:
 import ezscrape.scraping.scraper as scraper
 from ezscrape.scraping.core import ScrapeConfig
 from ezscrape.scraping.core import WaitForXpathElem
+from ezscrape.scraping.core import ScrapeStatus
 
-config = ScrapeConfig('http://some-url.com')                                                
-config.wait_for_elem_list.append(WaitForXpathElem(R'''XPATH'''))
+
+config = ScrapeConfig('http://www.website.com')
+# Add contition to wait until Element with "title='id'" is loaded"
+config.wait_for_elem_list.append(WaitForXpathElem(R'''//a[@title='id']'''))
 
 result = scraper.scrape_url(config)
 
-html = result.first_page.html
+if result.status == ScrapeStatus.SUCCESS:
+    html = result.first_page.html
+else:
+    print(result.error_msg)
 
 ~~~
 
@@ -106,7 +139,6 @@ config = ScrapeConfig('http://some-url.com')
 
 Additional parameters can be specified
 
-
 | Option                          | Purpose                                  | Type                                     | Default           | Example Use Case                         |
 |---------------------------------|------------------------------------------|------------------------------------------|-------------------|------------------------------------------|
 | ScrapeConfig.url                | The URL used for the request             | str                                      | N/A               | Required for all Requests                |
@@ -119,11 +151,22 @@ Additional parameters can be specified
 | ScrapeConfig.next_button        | Add a button element that needs to be loaded and clicked for ultiple pages | ezscrape.scraping.core.WaitForPageElem<br><br>or one of the subtypes e.g.<br><br>ezscrape.scraping.core.WaitForXpathElem | N/A               | User wants to return multiple pages if the next page links are generated with Javascript |
 | ScrapeConfig.wait_for_elem_list | A list of Elements that need to be loaded on the page before returning the scrape result | List of <br>ezscrape.scraping.core.WaitForPageElem<br><br>or one of the subtypes e.g.<br><br>ezscrape.scraping.core.WaitForXpathElem | N/A               | User is interested in multiple elements of a Javascript/Ajax page and needs to wait for all to load completely. |
 
+# Scrape Status
+
+The following statuses are supported in ezscrape.scraping.core.ScrapeStatus
+
+| Status                   | Meaning                 |
+|--------------------------|-------------------------|
+| ScrapeStatus.SUCCESS     | Scrape Succesfull       |
+| ScrapeStatus.TIMEOUT     | A timeout error occured |
+| ScrapeStatus.PROXY_ERROR | A proxy error occured   |
+| ScrapeStatus.ERROR       | A generic error occured |
+
+For non Success cases, additional error details are given in the [ScrapeResult](#scrape-result) object
+
 # Scrape Result
 
 The following attributes are available in ezscrape.scraping.core.ScrapeResults
-
-
 
 | Attribute              | Purpose                                  | Type                                |
 |------------------------|------------------------------------------|-------------------------------------|
@@ -134,19 +177,23 @@ The following attributes are available in ezscrape.scraping.core.ScrapeResults
 | request_time_ms        | The combined scrape time of all pages scraped | float                               |
 | first_page             | The ScrapePage scraped (first if multiple pages) | ezscrape.scraping.core.ScrapePage   |
 
-
 # Scrape Page
 
 The following attributes are available in ezscrape.scraping.core.ScrapePage
 
+| Attribute       | Purpose                                  | Type                                |
+|-----------------|------------------------------------------|-------------------------------------|
+| html            | The HTML content scraped                 | str                                 |
+| request_time_ms | the scrape duration for this page        | float                               |
+| status          | The scrape status for this page<br><br>ScrapePage doesn't have it's own error message. For details check ScrapeResult.error_msg | ezscrape.scraping.core.ScrapeStatus |
 
+## Contributing
+Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-| Attribute       | Purpose                           | Type                                |
-|-----------------|-----------------------------------|-------------------------------------|
-| html            | The HTML content scraped          | str                                 |
-| request_time_ms | the scrape duration for this page | float                               |
-| status          | The scrape status for this page   | ezscrape.scraping.core.ScrapeStatus |
+Please make sure to update tests as appropriate.
 
+## License
+[GPLv3](https://choosealicense.com/licenses/gpl-3.0/)
 
-
-
+  [1]: # Scrape Result
+  [2]: # Scrape Result
