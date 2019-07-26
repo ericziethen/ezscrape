@@ -13,3 +13,10 @@ safety
 
 # Profiling
 pyinstrument
+
+# Packaging
+twine
+wheel
+
+# parsing for testing
+beautifulsoup4
