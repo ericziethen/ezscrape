@@ -9,7 +9,7 @@ set PROJ_MAIN_DIR=%~dp0..
 set TEST_SERVER_DIR=%PROJ_MAIN_DIR%\tests\TestServerContent
 
 rem --directory only available since Python 3.7
-set COMMAND=python -m http.server --bind localhost 8000
+set COMMAND=python -m http.server --bind 127.0.0.1 8000
 
 pushd "%TEST_SERVER_DIR%"
 

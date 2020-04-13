@@ -18,19 +18,23 @@ matrix:
     os: linux
     dist: xenial
     python: "3.7.3"
+#  - name: "Windows, Python 3.7.3 (x32)"
+#    os: windows
+#    language: sh
+#    python: "3.7.3"
+#    before_install: choco install python --version=3.7.3 --x86
+#    env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+  - name: "Linux, Python 3.8"
+    os: linux
+    dist: xenial
+    python: "3.8"
     env: DEPLOY_ENABLED=True
-  - name: "Windows, Python 3.7.3 (x32)"
-    os: windows
-    language: sh
-    python: "3.7.3"
-    before_install: choco install python --version=3.7.3 --x86
-    env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
-  - name: "Windows, Python 3.7.3 (x64)"
-    os: windows
-    language: sh
-    python: "3.7.3"
-    before_install: choco install python --version=3.7.3
-    env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
+#  - name: "Windows, Python 3.7.3 (x64)"
+#    os: windows
+#    language: sh
+#    python: "3.7.3"
+#    before_install: choco install python --version=3.7.3
+#    env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
 
 install:
 - python --version --version

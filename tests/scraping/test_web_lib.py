@@ -13,7 +13,6 @@ def test_phrase_from_response_code_invalid_code():
         web_lib.phrase_from_response_code(20000)
 
 
-@pytest.mark.proxytest
 def test_split_url():
     url = 'http://91.208.39.70:8080'
     url_split = web_lib.split_url(url)

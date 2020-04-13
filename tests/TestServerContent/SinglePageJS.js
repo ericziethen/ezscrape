@@ -1,14 +1,22 @@
-function loadContent(waitMs) {
+
+async function loadContent(waitMs) {
     var a = document.createElement('p');
     var linkText = document.createTextNode("Waited " + waitMs + "ms for page to load");
     a.id = 'wait-text'
     a.appendChild(linkText);
     document.body.appendChild(a);
 
+    function my_sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+
     if(waitMs != null){
-        sleep(waitMs)
+        my_sleep(waitMs).then(() => {
+            document.getElementById("content").innerHTML = "LOADED-Javascript Line";
+          })
+    } else {
+        document.getElementById("content").innerHTML = "LOADED-Javascript Line";
     }
-    document.getElementById("content").innerHTML = "LOADED-Javascript Line";
 }
 
 function sleep(milliseconds) {

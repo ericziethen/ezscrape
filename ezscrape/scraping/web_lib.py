@@ -31,11 +31,12 @@ def phrase_from_response_code(code: int) -> str:
     status_code = http.HTTPStatus(code)
     # pylint: enable=no-value-for-parameter
 
-    return status_code.phrase
+    return status_code.phrase  # pylint: disable=no-member
 
 
 def split_url(url: str) -> UrlSplit:
     """Split the url into it's components."""
     result = urllib.parse.urlparse(url)
-    return UrlSplit(scheme=result.scheme, hostname=result.hostname,
-                    port=result.port)
+    return UrlSplit(scheme=result.scheme,
+                    hostname=result.hostname,  # type: ignore
+                    port=result.port)  # type: ignore
