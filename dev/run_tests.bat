@@ -22,6 +22,7 @@ rem TODO - Different Handling Needed, need to think how user will set it
 
 set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\74.0.3729.6\win32\chromedriver.exe
 set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\75.0.3770.90\win32\chromedriver.exe
+set CHROME_WEBDRIVER_PATH=%PROJ_MAIN_DIR%\%PACKAGE_ROOT%\webdriver\chromedriver\80.0.3987.106\win32\chromedriver.exe
 
 rem set CHROME_EXEC_PATH=C:\# Eric\Portable Apps\GoogleChromePortable\GoogleChromePortable.exe
 set CHROME_EXEC_PATH=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe
